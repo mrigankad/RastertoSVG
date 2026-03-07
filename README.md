@@ -93,8 +93,8 @@ A production-grade raster-to-vector conversion platform with three quality tiers
 
 ```bash
 # Clone repository
-git clone <repo-url>
-cd raster-to-svg
+git clone https://github.com/mrigankad/RastertoSVG.git
+cd RastertoSVG
 
 # Setup Python environment
 cd backend
