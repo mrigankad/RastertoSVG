@@ -102,7 +102,9 @@ class MLParamPredictor:
             logger.warning(f"Feature extraction failed: {e}")
             return {name: 0.0 for name in self.feature_names}
 
-    def classify_image_type(self, image: np.ndarray) -> Literal["photo", "illustration", "line-art", "logo"]:
+    def classify_image_type(
+        self, image: np.ndarray
+    ) -> Literal["photo", "illustration", "line-art", "logo"]:
         """Classify image type based on extracted features.
 
         Args:
@@ -382,7 +384,9 @@ class MLConverter:
                     self._sam_vectorizer = SAMVectorizer()
                     logger.info("Loaded SAMVectorizer (Tier 2)")
                 else:
-                    logger.debug("SAMVectorizer not available (torch/segment_anything not installed)")
+                    logger.debug(
+                        "SAMVectorizer not available (torch/segment_anything not installed)"
+                    )
             except ImportError:
                 logger.debug("SAMVectorizer import failed")
 

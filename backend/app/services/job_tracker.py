@@ -17,19 +17,13 @@ class JobTracker:
     """Tracks conversion job status using Redis."""
 
     def __init__(self):
-        self.redis_client = redis.from_url(
-            settings.REDIS_URL,
-            decode_responses=True
-        )
+        self.redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
         self.job_prefix = "job:"
         self.user_jobs_prefix = "user_jobs:"
         self.ttl = 30 * 24 * 60 * 60  # 30 days in seconds
 
     def create_job(
-        self,
-        file_id: str,
-        options: Dict[str, Any],
-        user_id: Optional[str] = None
+        self, file_id: str, options: Dict[str, Any], user_id: Optional[str] = None
     ) -> str:
         """
         Create a new job record.
@@ -185,12 +179,7 @@ class JobTracker:
 
         return result
 
-    def get_user_jobs(
-        self,
-        user_id: str,
-        limit: int = 50,
-        offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    def get_user_jobs(self, user_id: str, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Get jobs for a specific user."""
         user_jobs_key = f"{self.user_jobs_prefix}{user_id}"
         job_ids = self.redis_client.lrange(user_jobs_key, offset, offset + limit - 1)
@@ -210,9 +199,7 @@ class JobTracker:
 
         while len(jobs) < limit:
             cursor, keys = self.redis_client.scan(
-                cursor=cursor,
-                match=f"{self.job_prefix}*",
-                count=100
+                cursor=cursor, match=f"{self.job_prefix}*", count=100
             )
 
             for key in keys:
@@ -262,9 +249,7 @@ class JobTracker:
 
         while True:
             cursor, keys = self.redis_client.scan(
-                cursor=cursor,
-                match=f"{self.job_prefix}*",
-                count=100
+                cursor=cursor, match=f"{self.job_prefix}*", count=100
             )
 
             for key in keys:

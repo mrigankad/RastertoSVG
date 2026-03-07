@@ -38,6 +38,7 @@ class SAMVectorizer:
         # Check dependencies
         try:
             import torch
+
             self._torch_available = True
             logger.debug("torch is available")
         except ImportError:
@@ -45,6 +46,7 @@ class SAMVectorizer:
 
         try:
             from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
+
             self._sam_available = True
             logger.debug("segment_anything is available")
         except ImportError:
@@ -60,6 +62,7 @@ class SAMVectorizer:
         try:
             import torch
             from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
+
             return True
         except ImportError:
             return False
@@ -91,7 +94,9 @@ class SAMVectorizer:
                 from huggingface_hub import hf_hub_download
 
                 model_path = hf_hub_download(
-                    repo_id=self.MODEL_NAME, filename="pytorch_model.bin", cache_dir=str(self.CACHE_DIR)
+                    repo_id=self.MODEL_NAME,
+                    filename="pytorch_model.bin",
+                    cache_dir=str(self.CACHE_DIR),
                 )
                 logger.info(f"Downloaded SAM model to {model_path}")
 
@@ -173,7 +178,9 @@ class SAMVectorizer:
 
             # Convert BGR to RGB if needed
             if len(image.shape) == 3 and image.shape[2] == 3:
-                rgb_image = image[..., ::-1] if image.mean() > 10 else image  # Simple BGR/RGB detection
+                rgb_image = (
+                    image[..., ::-1] if image.mean() > 10 else image
+                )  # Simple BGR/RGB detection
             else:
                 rgb_image = image
 

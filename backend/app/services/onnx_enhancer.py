@@ -25,7 +25,9 @@ class ONNXEnhancer:
     """
 
     CACHE_DIR = Path.home() / ".cache" / "raster-svg" / "models"
-    EDSR_URL = "https://github.com/onnx/models/raw/main/vision/super_resolution/edsr/model/EDSR_x3.onnx"
+    EDSR_URL = (
+        "https://github.com/onnx/models/raw/main/vision/super_resolution/edsr/model/EDSR_x3.onnx"
+    )
 
     def __init__(self):
         """Initialize ONNX enhancer (lazy-loads session on first use)."""
@@ -34,6 +36,7 @@ class ONNXEnhancer:
 
         try:
             import onnxruntime
+
             self._ort_available = True
             logger.debug("onnxruntime is available")
         except ImportError:
@@ -48,6 +51,7 @@ class ONNXEnhancer:
         """
         try:
             import onnxruntime
+
             return True
         except ImportError:
             return False
@@ -74,6 +78,7 @@ class ONNXEnhancer:
             logger.info("Downloading EDSR model for super-resolution...")
             try:
                 import urllib.request
+
                 urllib.request.urlretrieve(self.EDSR_URL, model_path)
                 logger.info(f"Downloaded EDSR model to {model_path}")
                 return model_path
@@ -113,7 +118,9 @@ class ONNXEnhancer:
             sess_options = SessionOptions()
             sess_options.graph_optimization_level = GraphOptimizationLevel.ORT_ENABLE_ALL
 
-            self._session = InferenceSession(str(downloaded_path), sess_options=sess_options, providers=["CPUExecutionProvider"])
+            self._session = InferenceSession(
+                str(downloaded_path), sess_options=sess_options, providers=["CPUExecutionProvider"]
+            )
             logger.info("Loaded ONNX EDSR super-resolution model")
             return self._session
 
@@ -265,7 +272,9 @@ class ONNXEnhancer:
 
                 # Apply enhancement more strongly near edges
                 for c in range(3):
-                    enhanced[:, :, c] = enhanced[:, :, c] * (1 - 0.3 * edge_mask) + clahe_enhanced * (0.3 * edge_mask)
+                    enhanced[:, :, c] = enhanced[:, :, c] * (
+                        1 - 0.3 * edge_mask
+                    ) + clahe_enhanced * (0.3 * edge_mask)
 
                 result = np.clip(enhanced, 0, 255).astype(np.uint8)
             else:

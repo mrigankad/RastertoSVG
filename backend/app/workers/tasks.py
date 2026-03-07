@@ -84,6 +84,7 @@ def convert_image_task(self, job_id: str):
         }
 
         import json
+
         meta_path = result_subdir / f"{job_id}.json"
         with open(meta_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, default=str)
@@ -181,7 +182,7 @@ def batch_convert_task(self, batch_id: str, file_ids: list, options: dict):
                 "completed": completed,
                 "failed": failed,
                 "total": total,
-            }
+            },
         )
 
     logger.info(f"Batch {batch_id}: Queued {len(job_ids)} jobs")
@@ -257,10 +258,7 @@ def health_check_task():
     }
 
     # Overall status
-    healthy = (
-        health["redis"]["connected"] and
-        any(e["available"] for e in engine_info.values())
-    )
+    healthy = health["redis"]["connected"] and any(e["available"] for e in engine_info.values())
 
     health["status"] = "healthy" if healthy else "degraded"
 

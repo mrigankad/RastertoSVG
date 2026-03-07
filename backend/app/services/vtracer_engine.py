@@ -109,12 +109,7 @@ class VTracerEngine:
             logger.error(f"VTracer failed: {e}")
             raise RuntimeError(f"VTracer conversion failed: {e}")
 
-    def convert_pillow(
-        self,
-        image: Image.Image,
-        output_path: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+    def convert_pillow(self, image: Image.Image, output_path: str, **kwargs) -> Dict[str, Any]:
         """
         Convert a PIL Image object to SVG using VTracer.
 
@@ -128,6 +123,7 @@ class VTracerEngine:
         """
         # Save to temporary file
         import tempfile
+
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             temp_path = tmp.name
             image.save(temp_path, "PNG")
@@ -144,7 +140,8 @@ class VTracerEngine:
         try:
             # Check if vtracer Python API is available
             import vtracer
-            hasattr(vtracer, 'convert_image_to_svg_py')
+
+            hasattr(vtracer, "convert_image_to_svg_py")
             return True
         except ImportError:
             return False

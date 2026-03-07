@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class Converter:
     """
     Main conversion service that routes to appropriate engines.
-    
+
     Supports three quality modes with distinct pipelines:
     - Fast: No preprocessing, direct conversion
     - Standard: Color reduction + bilateral denoise + CLAHE contrast + standard optimization
@@ -112,49 +112,51 @@ class Converter:
         # Apply SVG optimization
         opt_start = time.time()
         try:
-            with open(output_path, 'r', encoding='utf-8') as f:
+            with open(output_path, "r", encoding="utf-8") as f:
                 svg_content = f.read()
-            
+
             # Choose optimization level
             opt_level = {
                 "fast": "light",
                 "standard": "standard",
                 "high": "aggressive",
             }.get(quality_mode, "standard")
-            
+
             optimized = self.optimizer.optimize(svg_content, level=opt_level)
-            
-            with open(output_path, 'w', encoding='utf-8') as f:
+
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(optimized)
-            
+
             optimization_time = time.time() - opt_start
             result["optimization_applied"] = True
             result["optimization_level"] = opt_level
-            
+
         except Exception as e:
             logger.warning(f"SVG optimization failed: {e}")
             result["optimization_applied"] = False
 
         # Add metadata
-        result.update({
-            "input_path": str(input_path),
-            "output_path": str(output_path),
-            "image_type": image_type,
-            "quality_mode": quality_mode,
-            "original_shape": original_shape,
-            "file_size_bytes": file_size,
-            "preprocessing_time": preprocessing_time,
-            "conversion_time": conversion_time,
-            "optimization_time": optimization_time,
-            "processing_time": time.time() - start_time,
-        })
+        result.update(
+            {
+                "input_path": str(input_path),
+                "output_path": str(output_path),
+                "image_type": image_type,
+                "quality_mode": quality_mode,
+                "original_shape": original_shape,
+                "file_size_bytes": file_size,
+                "preprocessing_time": preprocessing_time,
+                "conversion_time": conversion_time,
+                "optimization_time": optimization_time,
+                "processing_time": time.time() - start_time,
+            }
+        )
 
         # Add preprocessing info
         if quality_mode == "standard":
             result["preprocessing_applied"] = [
                 "color_reduction",
                 "bilateral_denoise",
-                "clahe_contrast"
+                "clahe_contrast",
             ]
         elif quality_mode == "high":
             result["preprocessing_applied"] = [
@@ -163,7 +165,7 @@ class Converter:
                 "clahe_contrast",
                 "unsharp_mask",
                 "edge_enhancement",
-                "aggressive_svg_optimization"
+                "aggressive_svg_optimization",
             ] + ml_steps_applied
 
         # Validate output
@@ -190,18 +192,18 @@ class Converter:
             img = Image.open(image_path)
 
             # Check mode
-            if img.mode == '1':  # 1-bit bilevel
+            if img.mode == "1":  # 1-bit bilevel
                 return "monochrome"
-            elif img.mode == 'L':  # Grayscale
+            elif img.mode == "L":  # Grayscale
                 return "monochrome"
-            elif img.mode in ('RGB', 'RGBA', 'P'):
+            elif img.mode in ("RGB", "RGBA", "P"):
                 # Check if it's actually grayscale disguised as RGB
                 if self._is_grayscale_image(img):
                     return "monochrome"
                 return "color"
             else:
                 # For other modes, convert and check
-                rgb_img = img.convert('RGB')
+                rgb_img = img.convert("RGB")
                 if self._is_grayscale_image(rgb_img):
                     return "monochrome"
                 return "color"
@@ -217,9 +219,10 @@ class Converter:
         sample_size = min(1000, width * height)
 
         import random
+
         random.seed(42)  # For reproducibility
 
-        img_rgb = img.convert('RGB')
+        img_rgb = img.convert("RGB")
         pixels = list(img_rgb.getdata())
 
         # Sample pixels
@@ -238,7 +241,7 @@ class Converter:
         image: np.ndarray,
         output_path: str,
         quality_mode: str,
-        ml_params: Optional[Dict[str, Any]] = None
+        ml_params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Use VTracer for color images."""
         logger.info(f"Converting color image with VTracer ({quality_mode} mode)")
@@ -266,11 +269,11 @@ class Converter:
         else:  # high
             # Merge ML parameters with base high mode parameters
             params = {
-                'color_precision': 64,
-                'max_iterations': 30,
-                'filter_speckle': 1,
-                'path_precision': 10,
-                'hierarchical': True,
+                "color_precision": 64,
+                "max_iterations": 30,
+                "filter_speckle": 1,
+                "path_precision": 10,
+                "hierarchical": True,
             }
             if ml_params:
                 # Override with ML-predicted values
@@ -285,7 +288,7 @@ class Converter:
         image: np.ndarray,
         output_path: str,
         quality_mode: str,
-        ml_params: Optional[Dict[str, Any]] = None
+        ml_params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Use Potrace for monochrome images."""
         logger.info(f"Converting monochrome image with Potrace ({quality_mode} mode)")
@@ -318,11 +321,11 @@ class Converter:
         else:  # high
             # Merge ML parameters with base high mode parameters
             params = {
-                'alphamax': 0.5,
-                'turdsize': 1,
-                'opticurve': True,
-                'opttolerance': 0.1,
-                'turnpolicy': "minority",
+                "alphamax": 0.5,
+                "turdsize": 1,
+                "opticurve": True,
+                "opttolerance": 0.1,
+                "turnpolicy": "minority",
             }
             if ml_params:
                 # Override with ML-predicted values
@@ -333,9 +336,7 @@ class Converter:
         return result
 
     def _apply_ml_enhancement(
-        self,
-        image: np.ndarray,
-        image_type: str
+        self, image: np.ndarray, image_type: str
     ) -> Tuple[np.ndarray, Dict[str, Any], List[str]]:
         """Apply multi-tier ML enhancement for high quality mode.
 
@@ -351,6 +352,7 @@ class Converter:
         if self._ml_converter is None:
             try:
                 from app.services.ml_converter import MLConverter
+
                 self._ml_converter = MLConverter()
                 logger.info("Loaded ML enhancement service")
             except ImportError:
@@ -361,8 +363,8 @@ class Converter:
                 return image, {}, []
 
         try:
-            enhanced_image, param_overrides, steps_applied = self._ml_converter.enhance_for_vectorization(
-                image, image_type
+            enhanced_image, param_overrides, steps_applied = (
+                self._ml_converter.enhance_for_vectorization(image, image_type)
             )
             logger.info(f"ML enhancement applied: {steps_applied}")
             return enhanced_image, param_overrides, steps_applied

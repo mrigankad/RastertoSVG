@@ -29,9 +29,7 @@ console = Console()
 @app.command()
 def convert(
     input_file: str = typer.Argument(..., help="Input raster image path"),
-    output_file: Optional[str] = typer.Option(
-        None, "--output", "-o", help="Output SVG file path"
-    ),
+    output_file: Optional[str] = typer.Option(None, "--output", "-o", help="Output SVG file path"),
     image_type: str = typer.Option(
         "auto", "--type", "-t", help="Image type: auto, color, monochrome"
     ),
@@ -44,9 +42,7 @@ def convert(
     denoise_strength: str = typer.Option(
         "medium", "--denoise", "-d", help="Denoise strength: light, medium, heavy"
     ),
-    verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="Verbose output"
-    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
     show_preprocessing: bool = typer.Option(
         False, "--show-preprocessing", "-s", help="Show preprocessing steps"
     ),
@@ -112,7 +108,7 @@ def convert(
 
             if show_preprocessing and quality != "fast":
                 console.print(f"\n[cyan]Preprocessing applied:[/cyan]")
-                for step in result.get('preprocessing_applied', []):
+                for step in result.get("preprocessing_applied", []):
                     console.print(f"  • {step}")
 
             if verbose:
@@ -121,9 +117,9 @@ def convert(
                 console.print(f"  Quality mode: {result['quality_mode']}")
                 console.print(f"  Original size: {result.get('file_size_bytes', 0)} bytes")
                 console.print(f"  Output size: {result.get('output_size_bytes', 0)} bytes")
-                if 'compression_ratio' in result:
+                if "compression_ratio" in result:
                     console.print(f"  Compression ratio: {result['compression_ratio']:.2f}x")
-                if result.get('optimization_applied'):
+                if result.get("optimization_applied"):
                     console.print(f"  Optimization: {result['optimization_level']}")
 
         except FileNotFoundError as e:
@@ -143,6 +139,7 @@ def convert(
             console.print(f"[red]✗ Unexpected error: {e}[/red]")
             if verbose:
                 import traceback
+
                 console.print(traceback.format_exc())
             raise typer.Exit(1)
 
@@ -199,9 +196,15 @@ def batch(
 @app.command()
 def preprocess(
     input_file: str = typer.Argument(..., help="Input image path"),
-    output_dir: str = typer.Option(..., "--output", "-o", help="Output directory for processed images"),
-    quality: str = typer.Option("standard", "--quality", "-q", help="Quality mode: fast, standard, high"),
-    compare: bool = typer.Option(False, "--compare", "-c", help="Generate comparison of all preprocessing methods"),
+    output_dir: str = typer.Option(
+        ..., "--output", "-o", help="Output directory for processed images"
+    ),
+    quality: str = typer.Option(
+        "standard", "--quality", "-q", help="Quality mode: fast, standard, high"
+    ),
+    compare: bool = typer.Option(
+        False, "--compare", "-c", help="Generate comparison of all preprocessing methods"
+    ),
 ):
     """Apply preprocessing to an image without converting to SVG."""
     input_path = Path(input_file)
@@ -217,14 +220,10 @@ def preprocess(
     if compare:
         # Generate comparison of all methods
         console.print("Generating preprocessing comparison...")
-        
+
         methods = ["original", "gaussian", "bilateral", "nlm", "clahe", "sharpen", "kmeans"]
-        results = preprocessor.compare_methods(
-            str(input_path),
-            str(output_path),
-            methods
-        )
-        
+        results = preprocessor.compare_methods(str(input_path), str(output_path), methods)
+
         console.print(f"\n[green]✓ Comparison complete![/green]")
         console.print(f"Results saved to: {output_path}")
         for method, file_path in results.items():
@@ -232,25 +231,26 @@ def preprocess(
     else:
         # Apply selected quality mode preprocessing
         console.print(f"Applying {quality} preprocessing...")
-        
+
         import cv2
+
         img = cv2.imread(str(input_path))
-        
+
         # Detect image type
         is_color = len(img.shape) == 3
         image_type = "color" if is_color else "monochrome"
-        
+
         # Apply preprocessing
         result = preprocessor.preprocess_array(img, image_type, quality)
-        
+
         # Save result
         output_file = output_path / f"{input_path.stem}_{quality}.png"
         cv2.imwrite(str(output_file), result)
-        
+
         console.print(f"\n[green]✓ Preprocessing complete![/green]")
         console.print(f"  Input:  {input_path}")
         console.print(f"  Output: {output_file}")
-        
+
         if quality == "standard":
             console.print(f"\n[cyan]Applied:[/cyan]")
             console.print("  • Color reduction")
@@ -289,7 +289,7 @@ def compare(
     for quality in ["fast", "standard", "high"]:
         out_file = output_path / f"{input_path.stem}_{quality}.svg"
         console.print(f"Converting with {quality} mode...", end=" ")
-        
+
         try:
             start = time.time()
             result = converter.convert(
@@ -298,7 +298,7 @@ def compare(
                 quality_mode=quality,
             )
             elapsed = time.time() - start
-            
+
             results[quality] = {
                 "time": elapsed,
                 "output_size": result.get("output_size_bytes", 0),
@@ -323,15 +323,10 @@ def compare(
                 quality.capitalize(),
                 f"{result['time']:.2f}s",
                 f"{result['output_size']:,} bytes",
-                "✓ Success"
+                "✓ Success",
             )
         else:
-            table.add_row(
-                quality.capitalize(),
-                "-",
-                "-",
-                f"✗ {result.get('error', 'Failed')}"
-            )
+            table.add_row(quality.capitalize(), "-", "-", f"✗ {result.get('error', 'Failed')}")
 
     console.print(table)
     console.print(f"\n[green]✓ Comparison complete![/green]")
@@ -350,7 +345,7 @@ def recommend(
         raise typer.Exit(1)
 
     console.print(f"Analyzing: {input_file}...")
-    
+
     analyzer = QualityAnalyzer()
     recommendation = analyzer.get_recommendation(str(input_path))
 
@@ -361,9 +356,9 @@ def recommend(
     console.print(f"\n[cyan]Recommendation:[/cyan]")
     console.print(f"  Mode: [green]{recommendation['recommended_mode']}[/green]")
     console.print(f"  Reason: {recommendation['reason']}")
-    
+
     console.print(f"\n[cyan]Image Characteristics:[/cyan]")
-    for key, value in recommendation['characteristics'].items():
+    for key, value in recommendation["characteristics"].items():
         console.print(f"  • {key}: {value}")
 
 
@@ -401,7 +396,7 @@ def info():
     console.print("  fast     - Direct conversion, no preprocessing")
     console.print("  standard - Color reduction + denoise + CLAHE")
     console.print("  high     - Standard + sharpening + edge enhancement")
-    
+
     console.print("\n[cyan]Preprocessing Methods:[/cyan]")
     console.print("  Color Reduction  - K-means clustering (8-256 colors)")
     console.print("  Denoise          - Gaussian, Bilateral, NLM, Median")
@@ -443,9 +438,9 @@ def validate(
     table.add_row("Detected Type", detected_type)
 
     # Estimate preprocessing time
-    if info['width'] * info['height'] < 1000000:  # < 1MP
+    if info["width"] * info["height"] < 1000000:  # < 1MP
         est_time = "< 1s"
-    elif info['width'] * info['height'] < 5000000:  # < 5MP
+    elif info["width"] * info["height"] < 5000000:  # < 5MP
         est_time = "1-3s"
     else:
         est_time = "3-10s"
@@ -460,7 +455,12 @@ def validate(
 def dither(
     input_file: str = typer.Argument(..., help="Input image path"),
     output_file: str = typer.Option(..., "--output", "-o", help="Output image path"),
-    method: str = typer.Option("floyd-steinberg", "--method", "-m", help="Dithering method: floyd-steinberg, bayer, atkinson, ordered"),
+    method: str = typer.Option(
+        "floyd-steinberg",
+        "--method",
+        "-m",
+        help="Dithering method: floyd-steinberg, bayer, atkinson, ordered",
+    ),
 ):
     """Apply dithering to convert image to black and white."""
     input_path = Path(input_file)
@@ -471,10 +471,11 @@ def dither(
         raise typer.Exit(1)
 
     preprocessor = Preprocessor()
-    
+
     import cv2
+
     img = cv2.imread(str(input_path))
-    
+
     # Map method string to enum
     method_map = {
         "floyd-steinberg": preprocessor.DitherMethod.FLOYD_STEINBERG,
@@ -482,17 +483,17 @@ def dither(
         "atkinson": preprocessor.DitherMethod.ATKINSON,
         "ordered": preprocessor.DitherMethod.ORDERED,
     }
-    
+
     if method not in method_map:
         console.print(f"[red]Error: Unknown method: {method}[/red]")
         raise typer.Exit(1)
-    
+
     # Apply dithering
     result = preprocessor.apply_dithering(img, method_map[method])
-    
+
     # Save result
     cv2.imwrite(str(output_path), result)
-    
+
     console.print(f"[green]✓ Dithering complete![/green]")
     console.print(f"  Method: {method}")
     console.print(f"  Input:  {input_path}")

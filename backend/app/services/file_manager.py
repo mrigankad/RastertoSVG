@@ -115,6 +115,7 @@ class FileManager:
         # Save metadata if provided
         if metadata:
             import json
+
             meta_path = result_subdir / f"{job_id}.json"
             with open(meta_path, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, default=str)
@@ -149,6 +150,7 @@ class FileManager:
                 meta_path = date_dir / f"{job_id}.json"
                 if meta_path.exists():
                     import json
+
                     with open(meta_path, "r", encoding="utf-8") as f:
                         return json.load(f)
         return None

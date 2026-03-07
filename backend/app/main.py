@@ -26,26 +26,28 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info(f"Redis URL: {settings.REDIS_URL}")
-    
+
     # Check services
     try:
         from app.services.converter import Converter
+
         converter = Converter()
         engine_info = converter.get_engine_info()
         logger.info(f"Engines: {engine_info}")
     except Exception as e:
         logger.warning(f"Could not check engines: {e}")
-    
+
     try:
         from app.services.job_tracker import JobTracker
+
         tracker = JobTracker()
         health = tracker.get_health_status()
         logger.info(f"Redis health: {health}")
     except Exception as e:
         logger.warning(f"Could not check Redis: {e}")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application")
 

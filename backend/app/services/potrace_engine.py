@@ -24,7 +24,9 @@ class PotraceEngine:
         output_path: str,
         threshold: Optional[int] = None,
         alphamax: float = 1.0,
-        turnpolicy: Literal["black", "white", "left", "right", "minority", "majority", "random"] = "minority",
+        turnpolicy: Literal[
+            "black", "white", "left", "right", "minority", "majority", "random"
+        ] = "minority",
         turdsize: int = 2,
         opticurve: bool = True,
         opttolerance: float = 0.2,
@@ -67,12 +69,12 @@ class PotraceEngine:
             img = Image.open(input_path)
 
             # Convert to grayscale
-            if img.mode != 'L':
-                img = img.convert('L')
+            if img.mode != "L":
+                img = img.convert("L")
 
             # Apply threshold if specified
             if threshold is not None:
-                img = img.point(lambda x: 0 if x < threshold else 255, '1')
+                img = img.point(lambda x: 0 if x < threshold else 255, "1")
             else:
                 # Auto threshold using Otsu's method
                 img = self._auto_threshold(img)
@@ -82,8 +84,8 @@ class PotraceEngine:
                 img = Image.eval(img, lambda x: 255 - x)
 
             # Save as PNM for Potrace
-            temp_pnm = out_path.with_suffix('.pnm')
-            img.save(temp_pnm, 'PPM')
+            temp_pnm = out_path.with_suffix(".pnm")
+            img.save(temp_pnm, "PPM")
 
         except Exception as e:
             logger.error(f"Image preprocessing failed: {e}")
@@ -94,18 +96,28 @@ class PotraceEngine:
             cmd = [
                 "potrace",
                 "-s",  # SVG output
-                "-o", str(out_path),
-                "-a", str(alphamax),
-                "-t", str(turdsize),
-                "--turnpolicy", turnpolicy,
-                "-O", str(opttolerance),
-                "-k", str(blacklevel),
+                "-o",
+                str(out_path),
+                "-a",
+                str(alphamax),
+                "-t",
+                str(turdsize),
+                "--turnpolicy",
+                turnpolicy,
+                "-O",
+                str(opttolerance),
+                "-k",
+                str(blacklevel),
             ]
 
             if opticurve:
-                cmd.append("-n")  # No curve optimization = False, so we don't add -n if opticurve=True
+                cmd.append(
+                    "-n"
+                )  # No curve optimization = False, so we don't add -n if opticurve=True
             else:
-                cmd.append("-O")  # Actually -O controls opttolerance, -n disables curve optimization
+                cmd.append(
+                    "-O"
+                )  # Actually -O controls opttolerance, -n disables curve optimization
                 cmd.append(str(opttolerance))
 
             if invert:
@@ -116,12 +128,7 @@ class PotraceEngine:
             logger.info(f"Running Potrace: {' '.join(cmd)}")
 
             # Execute Potrace
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stderr:
                 logger.warning(f"Potrace stderr: {result.stderr}")
@@ -151,12 +158,7 @@ class PotraceEngine:
             # Clean up temp file
             temp_pnm.unlink(missing_ok=True)
 
-    def convert_pillow(
-        self,
-        image: Image.Image,
-        output_path: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+    def convert_pillow(self, image: Image.Image, output_path: str, **kwargs) -> Dict[str, Any]:
         """
         Convert a PIL Image object to SVG using Potrace.
 
@@ -174,8 +176,8 @@ class PotraceEngine:
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             temp_path = tmp.name
             # Convert to grayscale for Potrace
-            if image.mode != 'L':
-                image = image.convert('L')
+            if image.mode != "L":
+                image = image.convert("L")
             image.save(temp_path, "PNG")
 
         try:
@@ -200,11 +202,7 @@ class PotraceEngine:
     def is_available(self) -> bool:
         """Check if Potrace is installed and available."""
         try:
-            subprocess.run(
-                ["potrace", "-v"],
-                capture_output=True,
-                check=True
-            )
+            subprocess.run(["potrace", "-v"], capture_output=True, check=True)
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
@@ -212,12 +210,7 @@ class PotraceEngine:
     def get_version(self) -> str:
         """Get Potrace version."""
         try:
-            result = subprocess.run(
-                ["potrace", "-v"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(["potrace", "-v"], capture_output=True, text=True, check=True)
             return result.stdout.strip()
         except:
             return "unknown"

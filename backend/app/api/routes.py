@@ -111,6 +111,7 @@ async def convert_image(
         logger.info(f"Created conversion job: {job_id} for file: {file_id}")
 
         from datetime import datetime, timezone, timezone
+
         return ConversionResponse(
             job_id=job_id,
             status="pending",
@@ -126,7 +127,7 @@ async def convert_image(
 async def compare_quality(file_id: str = Form(...)):
     """
     Run all three quality modes and return comparison.
-    
+
     Useful for users to understand trade-offs between quality modes.
     """
     # Validate file exists
@@ -137,7 +138,7 @@ async def compare_quality(file_id: str = Form(...)):
     try:
         # Create jobs for all three quality modes
         job_ids = {}
-        
+
         for quality in ["fast", "standard", "high"]:
             options = {
                 "image_type": "auto",
@@ -145,11 +146,11 @@ async def compare_quality(file_id: str = Form(...)):
                 "color_palette": 32 if quality == "standard" else (16 if quality == "fast" else 64),
                 "denoise_strength": "medium",
             }
-            
+
             job_id = job_tracker.create_job(file_id, options)
             convert_image_task.delay(job_id)
             job_ids[quality] = job_id
-        
+
         logger.info(f"Created comparison jobs for file: {file_id}")
 
         return {
@@ -246,17 +247,18 @@ async def download_result(job_id: str):
 async def get_result_stats(job_id: str):
     """Get statistics about a conversion result."""
     result_path = file_manager.get_result(job_id)
-    
+
     if not result_path or not result_path.exists():
         raise HTTPException(404, "Result not found")
-    
+
     try:
         from app.services.optimizer import SVGOptimizer
+
         optimizer = SVGOptimizer()
-        
-        with open(result_path, 'r', encoding='utf-8') as f:
+
+        with open(result_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         stats = optimizer.get_stats(content)
         return stats
     except Exception as e:
@@ -394,6 +396,7 @@ async def health_check() -> HealthCheck:
 
     # Check engines
     from app.services.converter import Converter
+
     converter = Converter()
     engine_info = converter.get_engine_info()
 
