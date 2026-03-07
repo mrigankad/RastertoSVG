@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { Settings, Zap, Gauge, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
-import { useConversionOptionsStore } from '@/lib/store';
+import { useConversionOptionsStore } from '../lib/store';
 
 export function ConversionForm() {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+
   const {
     image_type,
     quality_mode,
@@ -84,7 +84,7 @@ export function ConversionForm() {
             {qualityOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = quality_mode === option.value;
-              
+
               return (
                 <button
                   key={option.value}
@@ -118,7 +118,7 @@ export function ConversionForm() {
               );
             })}
           </div>
-          
+
           <p className="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
             {getQualityDescription()}
           </p>

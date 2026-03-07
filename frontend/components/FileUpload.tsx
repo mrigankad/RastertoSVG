@@ -2,8 +2,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { Upload, Image, X, FileCheck } from 'lucide-react';
-import { useUploadStore } from '@/lib/store';
-import { apiClient } from '@/lib/api';
+import { useUploadStore } from '../lib/store';
+import { apiClient } from '../lib/api';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/bmp', 'image/tiff', 'image/gif', 'image/webp'];
