@@ -12,7 +12,7 @@ export function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const {
     file,
     fileId,
@@ -47,7 +47,7 @@ export function FileUpload() {
 
     setError(null);
     setFile(selectedFile);
-    
+
     // Create preview
     const url = URL.createObjectURL(selectedFile);
     setPreviewUrl(url);
@@ -57,10 +57,10 @@ export function FileUpload() {
     setUploadProgress(0);
 
     try {
-      const response = await apiClient.upload(selectedFile, (progress) => {
+      const response = await apiClient.upload(selectedFile, (progress: number) => {
         setUploadProgress(progress);
       });
-      
+
       setFileId(response.file_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
@@ -74,7 +74,7 @@ export function FileUpload() {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
       handleFileSelect(droppedFile);
@@ -135,7 +135,7 @@ export function FileUpload() {
               <X className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="p-4 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -149,7 +149,7 @@ export function FileUpload() {
                   </p>
                 </div>
               </div>
-              
+
               {isUploading && (
                 <div className="text-right">
                   <p className="text-sm font-medium text-blue-600">
@@ -157,14 +157,14 @@ export function FileUpload() {
                   </p>
                 </div>
               )}
-              
+
               {fileId && !isUploading && (
                 <span className="text-sm text-green-600 font-medium">
                   Ready
                 </span>
               )}
             </div>
-            
+
             {isUploading && (
               <div className="mt-3">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -200,7 +200,7 @@ export function FileUpload() {
             onChange={handleInputChange}
             className="hidden"
           />
-          
+
           <div className="flex flex-col items-center">
             <div className={`
               p-4 rounded-full mb-4
@@ -212,14 +212,14 @@ export function FileUpload() {
                 <Upload className="w-8 h-8 text-gray-400" />
               )}
             </div>
-            
+
             <p className="text-lg font-medium text-gray-900 mb-2">
               {isDragging ? 'Drop your image here' : 'Drop your image here'}
             </p>
             <p className="text-gray-500 mb-4">
               or click to browse
             </p>
-            
+
             <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-400">
               <span className="px-2 py-1 bg-gray-100 rounded">PNG</span>
               <span className="px-2 py-1 bg-gray-100 rounded">JPG</span>
@@ -228,14 +228,14 @@ export function FileUpload() {
               <span className="px-2 py-1 bg-gray-100 rounded">GIF</span>
               <span className="px-2 py-1 bg-gray-100 rounded">WEBP</span>
             </div>
-            
+
             <p className="text-xs text-gray-400 mt-4">
               Maximum file size: 50MB
             </p>
           </div>
         </div>
       )}
-      
+
       {error && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{error}</p>

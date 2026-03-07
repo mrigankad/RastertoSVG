@@ -16,7 +16,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
   const [status, setStatus] = useState<JobStatus | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [cleanup, setCleanup] = useState<(() => void) | null>(null);
-  
+
   const { updateJob, removeJob } = useJobStore();
   const { addToHistory } = useHistoryStore();
 
@@ -35,7 +35,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
     try {
       const { apiClient } = await import('@/lib/api');
       const blob = await apiClient.downloadResult(jobId);
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -61,7 +61,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
     const startPolling = async () => {
       const cleanupFn = await pollJobStatus(
         jobId,
-        (newStatus) => {
+        (newStatus: JobStatus) => {
           setStatus(newStatus);
           updateJob(jobId, {
             status: newStatus.status,
@@ -72,7 +72,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
             processingTime: newStatus.processing_time || undefined,
           });
         },
-        (completedStatus) => {
+        (completedStatus: JobStatus) => {
           // On complete
           onComplete?.();
           addToHistory({
@@ -87,7 +87,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
             processingTime: completedStatus.processing_time || undefined,
           });
         },
-        (error) => {
+        (error: string) => {
           // On error
           onError?.(error);
           addToHistory({
@@ -194,7 +194,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
         `}>
           <Icon className={`w-8 h-8 ${display.color} ${isProcessing ? 'animate-spin' : ''}`} />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h4 className="font-semibold text-gray-900">
@@ -204,11 +204,11 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
               {formatTime(elapsed)}
             </span>
           </div>
-          
+
           <p className="text-sm text-gray-600 mb-3">
             {fileName}
           </p>
-          
+
           <p className="text-sm text-gray-500">
             {display.description}
           </p>

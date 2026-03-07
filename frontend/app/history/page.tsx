@@ -14,7 +14,7 @@ export default function HistoryPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Filter and search history
-  const filteredHistory = history.filter((item) => {
+  const filteredHistory = history.filter((item: any) => {
     const matchesSearch = item.fileName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'all' || item.status === filter;
     return matchesSearch && matchesFilter;
@@ -24,7 +24,7 @@ export default function HistoryPage() {
     setDownloadingId(jobId);
     try {
       const blob = await apiClient.downloadResult(jobId);
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -34,7 +34,7 @@ export default function HistoryPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('Download started');
     } catch (err) {
       toast.error('Download failed. The file may have expired.');
@@ -186,7 +186,7 @@ export default function HistoryPage() {
             </div>
 
             <div className="divide-y divide-gray-100">
-              {filteredHistory.map((item) => (
+              {filteredHistory.map((item: any) => (
                 <div
                   key={item.id}
                   className="p-4 hover:bg-gray-50 transition-colors"
