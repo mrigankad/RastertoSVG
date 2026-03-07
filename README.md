@@ -56,29 +56,48 @@ A production-grade raster-to-vector conversion platform with three quality tiers
 
 ## Architecture
 
+### System Flow
+
+```mermaid
+graph TD
+    User([User]) --> Frontend[Next.js Frontend]
+    Frontend --> API[FastAPI Backend]
+    API --> Redis[(Redis Queue)]
+    Redis --> Worker[Celery Worker]
+    Worker --> CV[OpenCV Preprocessor]
+    CV --> Engine[Vectorization Engine]
+    Engine --> Opt[SVG Optimizer]
+    Opt --> Result([SVG Result])
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Frontend      │────▶│   FastAPI        │────▶│   Celery        │
-│   (Next.js)     │     │   Backend        │     │   Workers       │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                               │                         │
-                               ▼                         ▼
-                        ┌──────────────────┐     ┌─────────────────┐
-                        │   Redis          │     │   VTracer/      │
-                        │   (Queue/Cache)  │     │   Potrace       │
-                        └──────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                        ┌──────────────────┐
-                        │   Preprocessor   │
-                        │   (OpenCV)       │
-                        └──────────────────┘
-                               │
-                               ▼
-                        ┌──────────────────┐
-                        │   SVG Optimizer  │
-                        │   (Scour/SVGO)   │
-                        └──────────────────┘
+
+### Conversion Pipeline
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant R as Redis
+    participant W as Worker
+    
+    U->>F: Upload Image
+    F->>B: POST /upload
+    B-->>F: File ID
+    F->>B: POST /convert (Quality Mode)
+    B->>R: Queue Job
+    B-->>F: Job ID
+    loop Processing
+        W->>R: Fetch Job
+        W->>W: Preprocessing (OpenCV)
+        W->>W: Vectorization (VTracer)
+        W->>W: Optimization (Scour)
+        W->>R: Update Status
+        F->>B: GET /status/{job_id}
+        B->>R: Query Status
+        R-->>B: Status/Result
+        B-->>F: Progress/Success
+    end
+    F->>U: Display SVG Result
 ```
 
 ## Quick Start
