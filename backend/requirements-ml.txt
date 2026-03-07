@@ -1,0 +1,14 @@
+# Optional ML Enhancement Dependencies (Tier 2 - PyTorch/SAM)
+# Install with: pip install -r requirements-ml.txt
+
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Segment Anything Model
+segment-anything>=1.0
+
+# Note: These are optional for the Raster to SVG Converter
+# The system will work with Tier 1 (sklearn) and Tier 3 (ONNX) if PyTorch is unavailable
+# Tier 2 enables advanced semantic segmentation-based vectorization
+# Each module is independently optional and will gracefully degrade if not available
