@@ -252,24 +252,21 @@ curl -o output.svg http://localhost:8000/api/v1/result/<job_id>
 | `/storage/stats` | GET | Storage statistics |
 | `/queue/stats` | GET | Queue statistics |
 
-## Development Phases
+## Development Roadmap & Phases
 
-- [x] Phase 0: Foundation & Environment Setup
-- [x] Phase 1: Core Engine & CLI Tool
-- [x] Phase 2: Preprocessing Pipeline
-- [x] Phase 3: Backend Infrastructure (API + Async)
-- [x] Phase 4: Frontend Application
-- [x] Phase 5: Quality Modes & Advanced Optimization
-- [x] Phase 6: Production & Deployment
+The project was built in several structured phases. You can find the full roadmap, including completed milestones and future plans, in the [Phases Documentation](./docs/PHASES.md).
 
 ## Documentation
 
+- [Development Phases & Roadmap](./docs/PHASES.md)
 - [CLI Documentation](./docs/CLI.md)
 - [API Documentation](./docs/API.md)
 - [Architecture Overview](./docs/ARCHITECTURE.md)
 - [Preprocessing Guide](./docs/PREPROCESSING.md)
 - [Quality Modes](./docs/QUALITY_MODES.md)
 - [Deployment Guide](./docs/DEPLOYMENT.md)
+- [Project Completion Report](./docs/PROJECT_COMPLETION_REPORT.md)
+- [Test Execution Summary](./docs/TEST_EXECUTION_SUMMARY.md)
 
 ## Examples
 
