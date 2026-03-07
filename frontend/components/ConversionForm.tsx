@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings, Zap, Gauge, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
-import { useConversionOptionsStore } from '../lib/store';
+import { useConversionOptionsStore } from '@/lib/store';
 
 export function ConversionForm() {
   const [showAdvanced, setShowAdvanced] = useState(false);

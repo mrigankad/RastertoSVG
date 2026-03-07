@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Play, Loader2 } from 'lucide-react';
-import { FileUpload } from '../../components/FileUpload';
-import { ConversionForm } from '../../components/ConversionForm';
-import { ProgressTracker } from '../../components/ProgressTracker';
-import { useUploadStore, useConversionOptionsStore, useJobStore } from '../../lib/store';
-import { apiClient } from '../../lib/api';
+import { FileUpload } from '@/components/FileUpload';
+import { ConversionForm } from '@/components/ConversionForm';
+import { ProgressTracker } from '@/components/ProgressTracker';
+import { useUploadStore, useConversionOptionsStore, useJobStore } from '@/lib/store';
+import { apiClient } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export default function ConvertPage() {

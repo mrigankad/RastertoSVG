@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { CheckCircle, XCircle, Loader2, Clock, Download } from 'lucide-react';
-import { pollJobStatus, JobStatus } from '../lib/api';
-import { useJobStore, useHistoryStore } from '../lib/store';
+import { pollJobStatus, JobStatus } from '@/lib/api';
+import { useJobStore, useHistoryStore } from '@/lib/store';
 
 interface ProgressTrackerProps {
   jobId: string;
@@ -33,7 +33,7 @@ export function ProgressTracker({ jobId, fileName, onComplete, onError }: Progre
     if (!status?.result_url) return;
 
     try {
-      const { apiClient } = await import('../lib/api');
+      const { apiClient } = await import('@/lib/api');
       const blob = await apiClient.downloadResult(jobId);
 
       // Create download link
