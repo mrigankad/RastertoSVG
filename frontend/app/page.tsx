@@ -63,10 +63,16 @@ export default function Home() {
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <Link
+                href="/convert-new"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                Enhanced Convert
+              </Link>
+              <Link
                 href="/convert"
                 className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
               >
-                Convert
+                Classic
               </Link>
               <Link
                 href="/history"
@@ -100,17 +106,17 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/convert"
+              href="/convert-new"
               className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
             >
-              Start Converting
+              Try Enhanced Mode
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
-              href="/history"
+              href="/convert"
               className="inline-flex items-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all"
             >
-              View History
+              Classic Mode
             </Link>
           </div>
         </div>
@@ -236,10 +242,10 @@ export default function Home() {
             Get started in seconds with our free online converter
           </p>
           <Link
-            href="/convert"
+            href="/convert-new"
             className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
           >
-            Start Converting Now
+            Try Enhanced Mode
             <ArrowRight className="ml-2 w-5 h-5" />
           </Link>
         </div>

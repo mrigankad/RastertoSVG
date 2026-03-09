@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
+from app.api.advanced_routes import router as advanced_router
+from app.api.websocket_routes import router as websocket_router
 from app.config import settings
 
 # Configure logging
@@ -103,6 +105,8 @@ async def not_found_handler(request: Request, exc: FileNotFoundError):
 
 # Include API routes
 app.include_router(router, prefix="/api/v1")
+app.include_router(advanced_router, prefix="/api/v1")
+app.include_router(websocket_router)
 
 
 @app.get("/health")
@@ -148,5 +152,14 @@ async def api_info():
             {"path": "/jobs", "method": "GET", "description": "List jobs"},
             {"path": "/storage/stats", "method": "GET", "description": "Storage stats"},
             {"path": "/queue/stats", "method": "GET", "description": "Queue stats"},
+        ],
+        "advanced_endpoints": [
+            {"path": "/advanced/filters", "method": "GET", "description": "List available preprocessing filters"},
+            {"path": "/advanced/preview", "method": "POST", "description": "Generate preprocessing preview"},
+            {"path": "/advanced/extract-colors/{file_id}", "method": "POST", "description": "Extract color palette"},
+            {"path": "/advanced/analyze/{file_id}", "method": "POST", "description": "Analyze image characteristics"},
+            {"path": "/advanced/presets", "method": "GET", "description": "List conversion presets"},
+            {"path": "/advanced/convert", "method": "POST", "description": "Enhanced conversion with full control"},
+            {"path": "/advanced/compare", "method": "POST", "description": "Compare conversion modes"},
         ],
     }
