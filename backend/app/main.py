@@ -11,6 +11,14 @@ from fastapi.responses import JSONResponse
 from app.api.routes import router
 from app.api.advanced_routes import router as advanced_router
 from app.api.websocket_routes import router as websocket_router
+from app.api.ai_routes import router as ai_router
+from app.api.auth_routes import router as auth_router
+from app.api.dashboard_routes import router as dashboard_router
+from app.api.export_routes import router as export_router
+from app.api.plugin_routes import router as plugin_router
+from app.api.billing_routes import router as billing_router
+from app.api.admin_routes import router as admin_router
+from app.api.generative_routes import router as generative_router
 from app.config import settings
 
 # Configure logging
@@ -48,9 +56,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Could not check Redis: {e}")
 
+    # Phase 9: Initialize database
+    try:
+        from app.database import init_database
+        await init_database()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.warning(f"Could not initialize database: {e}")
+
     yield
 
     # Shutdown
+    try:
+        from app.database import close_database
+        await close_database()
+    except Exception:
+        pass
     logger.info("Shutting down application")
 
 
@@ -106,6 +127,14 @@ async def not_found_handler(request: Request, exc: FileNotFoundError):
 # Include API routes
 app.include_router(router, prefix="/api/v1")
 app.include_router(advanced_router, prefix="/api/v1")
+app.include_router(ai_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(dashboard_router, prefix="/api/v1")
+app.include_router(export_router, prefix="/api/v1")
+app.include_router(plugin_router, prefix="/api/v1")
+app.include_router(billing_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
+app.include_router(generative_router, prefix="/api/v1")
 app.include_router(websocket_router)
 
 
@@ -161,5 +190,15 @@ async def api_info():
             {"path": "/advanced/presets", "method": "GET", "description": "List conversion presets"},
             {"path": "/advanced/convert", "method": "POST", "description": "Enhanced conversion with full control"},
             {"path": "/advanced/compare", "method": "POST", "description": "Compare conversion modes"},
+        ],
+        "ai_endpoints": [
+            {"path": "/ai/analyze/{file_id}", "method": "POST", "description": "AI image analysis & engine recommendation"},
+            {"path": "/ai/convert", "method": "POST", "description": "AI-powered conversion with smart engine selection"},
+            {"path": "/ai/result/{job_id}", "method": "GET", "description": "Download AI conversion result"},
+            {"path": "/ai/preprocess", "method": "POST", "description": "AI preprocessing preview"},
+            {"path": "/ai/remove-background", "method": "POST", "description": "AI background removal"},
+            {"path": "/ai/noise-analysis/{file_id}", "method": "POST", "description": "Intelligent noise analysis"},
+            {"path": "/ai/capabilities", "method": "GET", "description": "AI engine capabilities"},
+            {"path": "/ai/engines", "method": "GET", "description": "Available vectorization engines"},
         ],
     }

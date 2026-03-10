@@ -41,6 +41,36 @@ class Settings(BaseSettings):
     CONVERSION_TIMEOUT: int = 300  # 5 minutes
     MAX_WORKERS: int = 4
 
+    # Phase 9: Database
+    DATABASE_URL: str = "sqlite+aiosqlite:///./storage/raster_svg.db"
+
+    # Phase 9: Auth
+    JWT_SECRET_KEY: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    # Phase 9: OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    MICROSOFT_CLIENT_ID: str = ""
+    MICROSOFT_CLIENT_SECRET: str = ""
+    OAUTH_REDIRECT_BASE: str = "http://localhost:3000/auth/callback"
+
+    # Phase 9: Cloud Storage
+    STORAGE_PROVIDER: str = "local"  # "local", "s3", "r2"
+    STORAGE_BUCKET: str = "raster-svg-uploads"
+    STORAGE_CDN_URL: str = ""
+
+    # Phase 12: Billing (Stripe)
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_SUCCESS_URL: str = "http://localhost:3000/billing/success"
+    STRIPE_CANCEL_URL: str = "http://localhost:3000/billing/cancel"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -1,4 +1,7 @@
-"""Core services for conversion, preprocessing, and optimization."""
+"""Core services for conversion, preprocessing, and optimization.
+
+Phase 7 additions: AI Engine, Smart Engine Selector, AI Preprocessing, DiffVG Optimizer.
+"""
 
 from app.services.converter import Converter
 from app.services.preprocessor import Preprocessor
@@ -11,7 +14,14 @@ from app.services.quality_analyzer import QualityAnalyzer
 from app.services.file_manager import FileManager
 from app.services.job_tracker import JobTracker
 
+# Phase 7: AI-Powered Vectorization Engine
+from app.services.smart_engine_selector import SmartEngineSelector
+from app.services.ai_preprocessing import AIPreprocessingPipeline
+from app.services.diffvg_optimizer import SVGPathOptimizer
+from app.services.ai_engine import AIVectorizationEngine
+
 __all__ = [
+    # Core services
     "Converter",
     "Preprocessor",
     "SVGOptimizer",
@@ -22,4 +32,9 @@ __all__ = [
     "QualityAnalyzer",
     "FileManager",
     "JobTracker",
+    # Phase 7: AI Engine
+    "SmartEngineSelector",
+    "AIPreprocessingPipeline",
+    "SVGPathOptimizer",
+    "AIVectorizationEngine",
 ]

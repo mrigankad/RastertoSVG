@@ -5,10 +5,18 @@
 torch>=2.0.0
 torchvision>=0.15.0
 
-# Segment Anything Model
+# Segment Anything Model (SAM/SAM2)
 segment-anything>=1.0
+
+# Optional: DiffVG for differentiable SVG rendering (GPU required)
+# pydiffvg>=0.0.1
 
 # Note: These are optional for the Raster to SVG Converter
 # The system will work with Tier 1 (sklearn) and Tier 3 (ONNX) if PyTorch is unavailable
 # Tier 2 enables advanced semantic segmentation-based vectorization
 # Each module is independently optional and will gracefully degrade if not available
+
+# Phase 7 Additional Optional Dependencies:
+# - torch + segment-anything: Required for SAM-guided vectorization
+# - pydiffvg: Required for GPU-accelerated DiffVG optimization
+# - All AI features fallback gracefully when these are not installed
