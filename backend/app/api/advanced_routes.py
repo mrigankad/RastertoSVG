@@ -21,6 +21,7 @@ from app.api.advanced_models import (
     AvailableFiltersResponse,
     ComparisonRequest,
     ComparisonResponse,
+    ComparisonResult,
     ConversionPreset,
     ControlLevelConfig,
     EnhancedConversionRequest,

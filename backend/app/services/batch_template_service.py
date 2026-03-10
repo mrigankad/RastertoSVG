@@ -56,7 +56,7 @@ class BatchTemplateService:
         self._load_builtin_templates()
     
     def _load_builtin_templates(self):
-    """Load built-in batch templates."""
+        """Load built-in batch templates."""
         builtin_templates = [
             BatchTemplate(
                 id="logo-batch",
