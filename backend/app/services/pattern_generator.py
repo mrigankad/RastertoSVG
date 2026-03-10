@@ -440,13 +440,11 @@ class PatternGenerator:
             cy = random.randint(0, cfg.height)
             r = max(cfg.width, cfg.height) * (0.4 + 0.3 * random.random())
 
-            defs.append(
-                f"""<radialGradient id="mesh-{i}" cx="{cx}" cy="{cy}" r="{r}" 
+            defs.append(f"""<radialGradient id="mesh-{i}" cx="{cx}" cy="{cy}" r="{r}" 
                 gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="{color}" stop-opacity="0.8"/>
                 <stop offset="100%" stop-color="{color}" stop-opacity="0"/>
-            </radialGradient>"""
-            )
+            </radialGradient>""")
 
             elements.append(
                 f'<rect x="0" y="0" width="{cfg.width}" height="{cfg.height}" '
