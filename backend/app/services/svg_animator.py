@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # Animation Types
 # =============================================================================
 
+
 class AnimationType(str, Enum):
     DRAW_STROKE = "draw_stroke"
     FADE_IN = "fade_in"
@@ -47,6 +48,7 @@ class AnimationMethod(str, Enum):
 @dataclass
 class AnimationConfig:
     """Animation configuration."""
+
     type: AnimationType = AnimationType.DRAW_STROKE
     method: AnimationMethod = AnimationMethod.CSS
     duration: float = 2.0  # seconds
@@ -61,6 +63,7 @@ class AnimationConfig:
 @dataclass
 class AnimationResult:
     """Result of animation generation."""
+
     svg_data: bytes
     method: AnimationMethod
     element_count: int
@@ -71,6 +74,7 @@ class AnimationResult:
 # =============================================================================
 # CSS Animation Generator
 # =============================================================================
+
 
 class CSSAnimator:
     """Inject CSS animations into SVG elements."""
@@ -224,6 +228,7 @@ class CSSAnimator:
 # SMIL Animation Generator
 # =============================================================================
 
+
 class SMILAnimator:
     """Add SMIL animations directly to SVG elements."""
 
@@ -310,6 +315,7 @@ class SMILAnimator:
 # Lottie Export
 # =============================================================================
 
+
 class LottieExporter:
     """Convert SVG to Lottie JSON format."""
 
@@ -351,7 +357,9 @@ class LottieExporter:
         return lottie
 
     @staticmethod
-    def _element_to_layer(elem: ET.Element, tag: str, idx: int, config: AnimationConfig, total_frames: int) -> Optional[dict]:
+    def _element_to_layer(
+        elem: ET.Element, tag: str, idx: int, config: AnimationConfig, total_frames: int
+    ) -> Optional[dict]:
         """Convert SVG element to a Lottie layer."""
         delay_frames = int((config.delay + idx * config.stagger) * 30)
 
@@ -391,33 +399,39 @@ class LottieExporter:
             y = float(elem.get("y", "0"))
             w = float(elem.get("width", "0"))
             h = float(elem.get("height", "0"))
-            layer["shapes"].append({
-                "ty": "rc",
-                "d": 1,
-                "s": {"a": 0, "k": [w, h]},
-                "p": {"a": 0, "k": [x + w / 2, y + h / 2]},
-                "r": {"a": 0, "k": 0},
-            })
+            layer["shapes"].append(
+                {
+                    "ty": "rc",
+                    "d": 1,
+                    "s": {"a": 0, "k": [w, h]},
+                    "p": {"a": 0, "k": [x + w / 2, y + h / 2]},
+                    "r": {"a": 0, "k": 0},
+                }
+            )
 
         elif tag == "circle" or tag == "ellipse":
             cx = float(elem.get("cx", "0"))
             cy = float(elem.get("cy", "0"))
             rx = float(elem.get("r", elem.get("rx", "0")))
             ry = float(elem.get("r", elem.get("ry", str(rx))))
-            layer["shapes"].append({
-                "ty": "el",
-                "d": 1,
-                "s": {"a": 0, "k": [rx * 2, ry * 2]},
-                "p": {"a": 0, "k": [cx, cy]},
-            })
+            layer["shapes"].append(
+                {
+                    "ty": "el",
+                    "d": 1,
+                    "s": {"a": 0, "k": [rx * 2, ry * 2]},
+                    "p": {"a": 0, "k": [cx, cy]},
+                }
+            )
 
         # Add fill
-        layer["shapes"].append({
-            "ty": "fl",
-            "c": {"a": 0, "k": [r / 255, g / 255, b / 255, 1]},
-            "o": {"a": 0, "k": 100},
-            "r": 1,
-        })
+        layer["shapes"].append(
+            {
+                "ty": "fl",
+                "c": {"a": 0, "k": [r / 255, g / 255, b / 255, 1]},
+                "o": {"a": 0, "k": 100},
+                "r": 1,
+            }
+        )
 
         return layer
 
@@ -446,6 +460,7 @@ class LottieExporter:
 # =============================================================================
 # Master Animation Engine
 # =============================================================================
+
 
 class SVGAnimationEngine:
     """Orchestrates SVG animation generation."""
@@ -497,7 +512,8 @@ class SVGAnimationEngine:
         # Count elements
         root = ET.fromstring(svg_data)
         elem_count = sum(
-            1 for elem in root.iter()
+            1
+            for elem in root.iter()
             if (elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag)
             in ("path", "circle", "rect", "polygon", "polyline", "line", "ellipse")
         )

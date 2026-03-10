@@ -22,8 +22,10 @@ logger = logging.getLogger(__name__)
 # Configuration
 # =============================================================================
 
+
 class AuthConfig(BaseModel):
     """Authentication configuration."""
+
     secret_key: str = "change-me-in-production-use-a-real-secret-key"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
@@ -54,6 +56,7 @@ def get_auth_config() -> AuthConfig:
 # Password Hashing
 # =============================================================================
 
+
 class PasswordHasher:
     """Secure password hashing using bcrypt."""
 
@@ -65,9 +68,12 @@ class PasswordHasher:
         if self._bcrypt is None:
             try:
                 import bcrypt
+
                 self._bcrypt = bcrypt
             except ImportError:
-                logger.warning("bcrypt not installed, using hashlib fallback (NOT secure for production)")
+                logger.warning(
+                    "bcrypt not installed, using hashlib fallback (NOT secure for production)"
+                )
                 self._bcrypt = None
         return self._bcrypt
 
@@ -76,21 +82,21 @@ class PasswordHasher:
         bcrypt = self._get_bcrypt()
         if bcrypt:
             salt = bcrypt.gensalt(rounds=self.rounds)
-            return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+            return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
         else:
             # Fallback (development only)
-            return hashlib.sha256(password.encode('utf-8')).hexdigest()
+            return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
     def verify_password(self, password: str, hashed: str) -> bool:
         """Verify a password against its hash."""
         bcrypt = self._get_bcrypt()
         if bcrypt:
             try:
-                return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+                return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
             except Exception:
                 return False
         else:
-            return hashlib.sha256(password.encode('utf-8')).hexdigest() == hashed
+            return hashlib.sha256(password.encode("utf-8")).hexdigest() == hashed
 
 
 password_hasher = PasswordHasher()
@@ -99,6 +105,7 @@ password_hasher = PasswordHasher()
 # =============================================================================
 # JWT Token Management
 # =============================================================================
+
 
 class TokenManager:
     """JWT token creation and verification."""
@@ -111,10 +118,12 @@ class TokenManager:
         if self._jwt is None:
             try:
                 import jwt
+
                 self._jwt = jwt
             except ImportError:
                 try:
                     import jose.jwt as jose_jwt
+
                     self._jwt = jose_jwt
                 except ImportError:
                     raise ImportError("Install PyJWT or python-jose: pip install PyJWT")
@@ -180,6 +189,7 @@ token_manager = TokenManager(_config)
 # API Key Management
 # =============================================================================
 
+
 class APIKeyManager:
     """Generate and validate API keys."""
 
@@ -195,13 +205,13 @@ class APIKeyManager:
         random_part = secrets.token_urlsafe(32)
         full_key = f"{self.prefix}{random_part}"
         key_prefix = full_key[:8]
-        key_hash = hashlib.sha256(full_key.encode('utf-8')).hexdigest()
+        key_hash = hashlib.sha256(full_key.encode("utf-8")).hexdigest()
 
         return full_key, key_prefix, key_hash
 
     def hash_key(self, key: str) -> str:
         """Hash an API key for storage."""
-        return hashlib.sha256(key.encode('utf-8')).hexdigest()
+        return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
     def get_prefix(self, key: str) -> str:
         """Get the prefix of an API key for identification."""
@@ -214,6 +224,7 @@ api_key_manager = APIKeyManager()
 # =============================================================================
 # Verification & Reset Tokens
 # =============================================================================
+
 
 def generate_verification_token() -> str:
     """Generate an email verification token."""
@@ -228,6 +239,7 @@ def generate_reset_token() -> str:
 # =============================================================================
 # OAuth Helpers
 # =============================================================================
+
 
 class OAuthHelper:
     """OAuth 2.0 token exchange for supported providers."""

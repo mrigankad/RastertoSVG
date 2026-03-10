@@ -27,7 +27,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.database import (
-    User, OAuthAccount, APIKey, UserRole, PlanTier, OAuthProvider, PLAN_LIMITS,
+    User,
+    OAuthAccount,
+    APIKey,
+    UserRole,
+    PlanTier,
+    OAuthProvider,
+    PLAN_LIMITS,
 )
 from app.services.auth_service import (
     password_hasher,
@@ -48,15 +54,18 @@ router = APIRouter(prefix="/auth", tags=["Authentication (Phase 9)"])
 # Request / Response Models
 # =============================================================================
 
+
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     display_name: Optional[str] = None
     username: Optional[str] = None
 
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -65,28 +74,35 @@ class TokenResponse(BaseModel):
     expires_in: int = 1800
     user: dict
 
+
 class RefreshRequest(BaseModel):
     refresh_token: str
+
 
 class OAuthCallbackRequest(BaseModel):
     code: str
     state: Optional[str] = None
 
+
 class VerifyEmailRequest(BaseModel):
     token: str
+
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
+
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
 
 class UpdateProfileRequest(BaseModel):
     display_name: Optional[str] = None
     username: Optional[str] = None
     avatar_url: Optional[str] = None
     preferences: Optional[dict] = None
+
 
 class UserResponse(BaseModel):
     id: str
@@ -100,10 +116,12 @@ class UserResponse(BaseModel):
     created_at: str
     plan_limits: dict
 
+
 class CreateAPIKeyRequest(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     scopes: List[str] = ["convert", "upload"]
     expires_in_days: Optional[int] = None
+
 
 class APIKeyResponse(BaseModel):
     id: str
@@ -120,6 +138,7 @@ class APIKeyResponse(BaseModel):
 # =============================================================================
 # Helper for building user response
 # =============================================================================
+
 
 def _user_to_response(user: User) -> UserResponse:
     plan_limits = PLAN_LIMITS.get(user.plan, PLAN_LIMITS[PlanTier.FREE])
@@ -156,6 +175,7 @@ def _build_token_response(user: User) -> TokenResponse:
 # =============================================================================
 # Registration & Login
 # =============================================================================
+
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
@@ -232,6 +252,7 @@ async def refresh_token(request: RefreshRequest, db: AsyncSession = Depends(get_
 # =============================================================================
 # OAuth
 # =============================================================================
+
 
 @router.get("/oauth/{provider}/url")
 async def get_oauth_url(provider: str):
@@ -325,12 +346,11 @@ async def oauth_callback(
 # Email Verification & Password Reset
 # =============================================================================
 
+
 @router.post("/verify-email")
 async def verify_email(request: VerifyEmailRequest, db: AsyncSession = Depends(get_db)):
     """Verify user email with token."""
-    result = await db.execute(
-        select(User).where(User.verification_token == request.token)
-    )
+    result = await db.execute(select(User).where(User.verification_token == request.token))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -353,6 +373,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: AsyncSession = Dep
     if user and user.hashed_password:
         user.reset_token = generate_reset_token()
         from datetime import timedelta
+
         user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=2)
         await db.flush()
         # TODO: Send email with reset link
@@ -384,6 +405,7 @@ async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depen
 # =============================================================================
 # Profile
 # =============================================================================
+
 
 @router.get("/me", response_model=UserResponse)
 async def get_profile(user: User = Depends(get_current_active_user)):
@@ -420,6 +442,7 @@ async def update_profile(
 # =============================================================================
 # API Keys
 # =============================================================================
+
 
 @router.get("/api-keys", response_model=list[APIKeyResponse])
 async def list_api_keys(
@@ -459,6 +482,7 @@ async def create_api_key(
     expires_at = None
     if request.expires_in_days:
         from datetime import timedelta
+
         expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
 
     api_key = APIKey(
@@ -494,9 +518,7 @@ async def revoke_api_key(
     db: AsyncSession = Depends(get_db),
 ):
     """Revoke an API key."""
-    result = await db.execute(
-        select(APIKey).where(APIKey.id == key_id, APIKey.user_id == user.id)
-    )
+    result = await db.execute(select(APIKey).where(APIKey.id == key_id, APIKey.user_id == user.id))
     api_key = result.scalar_one_or_none()
 
     if not api_key:

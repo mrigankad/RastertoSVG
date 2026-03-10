@@ -13,8 +13,16 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Float,
-    ForeignKey, Integer, String, Text, BigInteger, JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    BigInteger,
+    JSON,
     Index,
 )
 from sqlalchemy.orm import relationship
@@ -26,6 +34,7 @@ from app.models.database import Base
 # =============================================================================
 # Enums
 # =============================================================================
+
 
 class SubscriptionStatus(str, Enum):
     TRIALING = "trialing"
@@ -56,20 +65,20 @@ class AuditAction(str, Enum):
     LOGOUT = "logout"
     REGISTER = "register"
     PASSWORD_RESET = "password_reset"
-    
+
     # Account
     PLAN_UPGRADE = "plan_upgrade"
     PLAN_DOWNGRADE = "plan_downgrade"
     SUBSCRIPTION_CANCEL = "subscription_cancel"
     API_KEY_CREATE = "api_key_create"
     API_KEY_REVOKE = "api_key_revoke"
-    
+
     # Team
     TEAM_CREATE = "team_create"
     TEAM_MEMBER_ADD = "team_member_add"
     TEAM_MEMBER_REMOVE = "team_member_remove"
     TEAM_ROLE_CHANGE = "team_role_change"
-    
+
     # Data
     PROJECT_CREATE = "project_create"
     PROJECT_DELETE = "project_delete"
@@ -77,13 +86,13 @@ class AuditAction(str, Enum):
     CONVERSION_COMPLETE = "conversion_complete"
     FILE_UPLOAD = "file_upload"
     FILE_DELETE = "file_delete"
-    
+
     # Admin
     ADMIN_USER_BAN = "admin_user_ban"
     ADMIN_USER_UNBAN = "admin_user_unban"
     ADMIN_PLAN_OVERRIDE = "admin_plan_override"
     ADMIN_CONFIG_CHANGE = "admin_config_change"
-    
+
     # Plugin
     PLUGIN_INSTALL = "plugin_install"
     PLUGIN_UNINSTALL = "plugin_uninstall"
@@ -98,6 +107,7 @@ class LicenseType(str, Enum):
 # =============================================================================
 # Subscription Model
 # =============================================================================
+
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -131,8 +141,11 @@ class Subscription(Base):
 
     # Metadata
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     user = relationship("User", backref="subscriptions")
@@ -143,6 +156,7 @@ class Subscription(Base):
 # Invoice Model
 # =============================================================================
 
+
 class Invoice(Base):
     __tablename__ = "invoices"
     __table_args__ = (
@@ -151,7 +165,9 @@ class Invoice(Base):
     )
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    subscription_id = Column(String(36), ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True)
+    subscription_id = Column(
+        String(36), ForeignKey("subscriptions.id", ondelete="SET NULL"), nullable=True
+    )
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     # Stripe
@@ -193,6 +209,7 @@ class Invoice(Base):
 # Audit Log
 # =============================================================================
 
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
     __table_args__ = (
@@ -226,11 +243,10 @@ class AuditLog(Base):
 # License Key (Self-Hosted / White-Label)
 # =============================================================================
 
+
 class LicenseKey(Base):
     __tablename__ = "license_keys"
-    __table_args__ = (
-        Index("ix_license_key", "key_hash", unique=True),
-    )
+    __table_args__ = (Index("ix_license_key", "key_hash", unique=True),)
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

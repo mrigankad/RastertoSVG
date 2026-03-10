@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # Marketplace Models
 # =============================================================================
 
+
 class ListingStatus(str, Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
@@ -45,6 +46,7 @@ class TemplateCategory(str, Enum):
 @dataclass
 class MarketplaceListing:
     """A plugin listing in the marketplace."""
+
     id: str
     plugin_id: str
     name: str
@@ -55,22 +57,22 @@ class MarketplaceListing:
     author_id: str = ""
     plugin_type: str = "preprocessing"
     status: ListingStatus = ListingStatus.DRAFT
-    
+
     # Discovery
     tags: List[str] = field(default_factory=list)
     category: str = "other"
     screenshots: List[str] = field(default_factory=list)
     icon_url: str = ""
-    
+
     # Stats
     downloads: int = 0
     rating: float = 0.0
     review_count: int = 0
-    
+
     # Pricing
     is_free: bool = True
     price_usd: float = 0.0
-    
+
     # Metadata
     homepage: str = ""
     repository: str = ""
@@ -112,6 +114,7 @@ class MarketplaceListing:
 @dataclass
 class PluginReview:
     """A user review for a marketplace plugin."""
+
     id: str
     listing_id: str
     user_id: str
@@ -125,13 +128,14 @@ class PluginReview:
 @dataclass
 class ConversionTemplate:
     """A community conversion template / preset."""
+
     id: str
     name: str
     description: str
     author: str = ""
     author_id: str = ""
     category: TemplateCategory = TemplateCategory.OTHER
-    
+
     # Template config
     config: Dict[str, Any] = field(default_factory=dict)
     # Example config: {
@@ -141,11 +145,11 @@ class ConversionTemplate:
     #   "ai_mode": "balanced",
     #   "export_format": "svg"
     # }
-    
+
     # Sample images
     sample_input_url: str = ""
     sample_output_url: str = ""
-    
+
     # Stats
     use_count: int = 0
     rating: float = 0.0
@@ -176,6 +180,7 @@ class ConversionTemplate:
 # Marketplace Service
 # =============================================================================
 
+
 class MarketplaceService:
     """Plugin marketplace management service."""
 
@@ -193,7 +198,7 @@ class MarketplaceService:
         """Publish or update a marketplace listing."""
         if not listing.id:
             listing.id = str(uuid.uuid4())
-        
+
         now = time.strftime("%Y-%m-%dT%H:%M:%SZ")
         if not listing.created_at:
             listing.created_at = now
@@ -236,15 +241,13 @@ class MarketplaceService:
         offset: int = 0,
     ) -> List[MarketplaceListing]:
         """Search marketplace listings."""
-        results = [
-            l for l in self._listings.values()
-            if l.status == ListingStatus.PUBLISHED
-        ]
+        results = [l for l in self._listings.values() if l.status == ListingStatus.PUBLISHED]
 
         if query:
             q = query.lower()
             results = [
-                l for l in results
+                l
+                for l in results
                 if q in l.name.lower()
                 or q in l.description.lower()
                 or any(q in t.lower() for t in l.tags)
@@ -269,14 +272,11 @@ class MarketplaceService:
 
         results.sort(key=sort_key, reverse=(sort_by != "name"))
 
-        return results[offset:offset + limit]
+        return results[offset : offset + limit]
 
     def get_featured_listings(self, limit: int = 10) -> List[MarketplaceListing]:
         """Get top-rated published listings."""
-        published = [
-            l for l in self._listings.values()
-            if l.status == ListingStatus.PUBLISHED
-        ]
+        published = [l for l in self._listings.values() if l.status == ListingStatus.PUBLISHED]
         published.sort(key=lambda l: (l.rating * l.review_count, l.downloads), reverse=True)
         return published[:limit]
 
@@ -345,7 +345,8 @@ class MarketplaceService:
         if query:
             q = query.lower()
             results = [
-                t for t in results
+                t
+                for t in results
                 if q in t.name.lower()
                 or q in t.description.lower()
                 or any(q in tag.lower() for tag in t.tags)
@@ -384,9 +385,7 @@ class MarketplaceService:
             "total_templates": len(self._templates),
             "total_downloads": sum(l.downloads for l in published),
             "total_reviews": sum(len(reviews) for reviews in self._reviews.values()),
-            "avg_rating": (
-                sum(l.rating for l in published) / len(published) if published else 0
-            ),
+            "avg_rating": (sum(l.rating for l in published) / len(published) if published else 0),
             "plugins_by_type": {
                 pt: len([l for l in published if l.plugin_type == pt])
                 for pt in ["preprocessing", "vectorization", "postprocessing", "export"]

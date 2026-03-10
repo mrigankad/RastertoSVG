@@ -59,6 +59,7 @@ async def lifespan(app: FastAPI):
     # Phase 9: Initialize database
     try:
         from app.database import init_database
+
         await init_database()
         logger.info("Database initialized successfully")
     except Exception as e:
@@ -69,6 +70,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     try:
         from app.database import close_database
+
         await close_database()
     except Exception:
         pass
@@ -183,22 +185,74 @@ async def api_info():
             {"path": "/queue/stats", "method": "GET", "description": "Queue stats"},
         ],
         "advanced_endpoints": [
-            {"path": "/advanced/filters", "method": "GET", "description": "List available preprocessing filters"},
-            {"path": "/advanced/preview", "method": "POST", "description": "Generate preprocessing preview"},
-            {"path": "/advanced/extract-colors/{file_id}", "method": "POST", "description": "Extract color palette"},
-            {"path": "/advanced/analyze/{file_id}", "method": "POST", "description": "Analyze image characteristics"},
-            {"path": "/advanced/presets", "method": "GET", "description": "List conversion presets"},
-            {"path": "/advanced/convert", "method": "POST", "description": "Enhanced conversion with full control"},
-            {"path": "/advanced/compare", "method": "POST", "description": "Compare conversion modes"},
+            {
+                "path": "/advanced/filters",
+                "method": "GET",
+                "description": "List available preprocessing filters",
+            },
+            {
+                "path": "/advanced/preview",
+                "method": "POST",
+                "description": "Generate preprocessing preview",
+            },
+            {
+                "path": "/advanced/extract-colors/{file_id}",
+                "method": "POST",
+                "description": "Extract color palette",
+            },
+            {
+                "path": "/advanced/analyze/{file_id}",
+                "method": "POST",
+                "description": "Analyze image characteristics",
+            },
+            {
+                "path": "/advanced/presets",
+                "method": "GET",
+                "description": "List conversion presets",
+            },
+            {
+                "path": "/advanced/convert",
+                "method": "POST",
+                "description": "Enhanced conversion with full control",
+            },
+            {
+                "path": "/advanced/compare",
+                "method": "POST",
+                "description": "Compare conversion modes",
+            },
         ],
         "ai_endpoints": [
-            {"path": "/ai/analyze/{file_id}", "method": "POST", "description": "AI image analysis & engine recommendation"},
-            {"path": "/ai/convert", "method": "POST", "description": "AI-powered conversion with smart engine selection"},
-            {"path": "/ai/result/{job_id}", "method": "GET", "description": "Download AI conversion result"},
+            {
+                "path": "/ai/analyze/{file_id}",
+                "method": "POST",
+                "description": "AI image analysis & engine recommendation",
+            },
+            {
+                "path": "/ai/convert",
+                "method": "POST",
+                "description": "AI-powered conversion with smart engine selection",
+            },
+            {
+                "path": "/ai/result/{job_id}",
+                "method": "GET",
+                "description": "Download AI conversion result",
+            },
             {"path": "/ai/preprocess", "method": "POST", "description": "AI preprocessing preview"},
-            {"path": "/ai/remove-background", "method": "POST", "description": "AI background removal"},
-            {"path": "/ai/noise-analysis/{file_id}", "method": "POST", "description": "Intelligent noise analysis"},
+            {
+                "path": "/ai/remove-background",
+                "method": "POST",
+                "description": "AI background removal",
+            },
+            {
+                "path": "/ai/noise-analysis/{file_id}",
+                "method": "POST",
+                "description": "Intelligent noise analysis",
+            },
             {"path": "/ai/capabilities", "method": "GET", "description": "AI engine capabilities"},
-            {"path": "/ai/engines", "method": "GET", "description": "Available vectorization engines"},
+            {
+                "path": "/ai/engines",
+                "method": "GET",
+                "description": "Available vectorization engines",
+            },
         ],
     }

@@ -44,6 +44,7 @@ router = APIRouter(prefix="/export", tags=["Export & Animation (Phase 10)"])
 # Request / Response Models
 # =============================================================================
 
+
 class ExportRequest(BaseModel):
     format: str = Field(description="Target format: svg, pdf, eps, dxf, emf, png")
     scale: float = Field(default=1.0, ge=0.1, le=10.0)
@@ -53,13 +54,17 @@ class ExportRequest(BaseModel):
     background_color: Optional[str] = None
     color_space: str = Field(default="rgb")
 
+
 class BatchExportRequest(BaseModel):
     formats: List[str] = Field(description="List of target formats")
     scale: float = Field(default=1.0, ge=0.1, le=10.0)
     dpi: int = Field(default=300, ge=72, le=1200)
 
+
 class AnimationRequest(BaseModel):
-    preset: Optional[str] = Field(default=None, description="Preset name: draw_stroke, fade_in, color_cycle, pulse")
+    preset: Optional[str] = Field(
+        default=None, description="Preset name: draw_stroke, fade_in, color_cycle, pulse"
+    )
     type: Optional[str] = Field(default=None, description="Animation type override")
     method: str = Field(default="css", description="css, smil, or lottie")
     duration: float = Field(default=2.0, ge=0.1, le=30.0)
@@ -69,6 +74,7 @@ class AnimationRequest(BaseModel):
     iteration_count: str = Field(default="1")
     colors: List[str] = Field(default=["#3b82f6", "#8b5cf6", "#ec4899"])
 
+
 class EnhanceRequest(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
@@ -77,6 +83,7 @@ class EnhanceRequest(BaseModel):
     add_metadata: bool = True
     minify: bool = False
     lang: str = "en"
+
 
 class GradientDef(BaseModel):
     id: str
@@ -90,10 +97,12 @@ class GradientDef(BaseModel):
     cy: str = "50%"
     r: str = "50%"
 
+
 class FormatInfoResponse(BaseModel):
     formats: dict
     available_count: int
     total_count: int
+
 
 class ExportResponse(BaseModel):
     format: str
@@ -102,14 +111,17 @@ class ExportResponse(BaseModel):
     export_time_ms: int
     warnings: List[str] = []
 
+
 class BatchExportResponse(BaseModel):
     results: dict
     total_time_ms: int
+
 
 class AnimationPresetsResponse(BaseModel):
     presets: dict
     methods: List[str]
     types: List[str]
+
 
 class SVGStatsResponse(BaseModel):
     stats: dict
@@ -118,6 +130,7 @@ class SVGStatsResponse(BaseModel):
 # =============================================================================
 # Export Endpoints
 # =============================================================================
+
 
 @router.get("/formats", response_model=FormatInfoResponse)
 async def get_export_formats():
@@ -143,7 +156,7 @@ async def export_svg(
     background_color: Optional[str] = Form(None),
 ):
     """Convert SVG to the specified format."""
-    if not svg_file.filename or not svg_file.filename.lower().endswith(('.svg', '.xml')):
+    if not svg_file.filename or not svg_file.filename.lower().endswith((".svg", ".xml")):
         raise HTTPException(400, "Please upload an SVG file")
 
     svg_data = await svg_file.read()
@@ -153,7 +166,9 @@ async def export_svg(
     try:
         export_format = ExportFormat(format.lower())
     except ValueError:
-        raise HTTPException(400, f"Unsupported format: {format}. Available: {[f.value for f in ExportFormat]}")
+        raise HTTPException(
+            400, f"Unsupported format: {format}. Available: {[f.value for f in ExportFormat]}"
+        )
 
     options = ExportOptions(
         format=export_format,
@@ -227,6 +242,7 @@ async def batch_export(
 # =============================================================================
 # Animation Endpoints
 # =============================================================================
+
 
 @router.get("/animation/presets", response_model=AnimationPresetsResponse)
 async def get_animation_presets():
@@ -304,11 +320,13 @@ async def export_lottie(
     if not result.lottie_json:
         # Generate Lottie even if preset didn't use LOTTIE method
         from app.services.svg_animator import LottieExporter
+
         lottie = LottieExporter.export(svg_data, config)
     else:
         lottie = result.lottie_json
 
     import json
+
     lottie_bytes = json.dumps(lottie, indent=2).encode("utf-8")
     filename = svg_file.filename.rsplit(".", 1)[0] + ".json"
 
@@ -324,6 +342,7 @@ async def export_lottie(
 # =============================================================================
 # Enhancement Endpoints
 # =============================================================================
+
 
 @router.post("/enhance/responsive")
 async def enhance_svg(
@@ -385,14 +404,16 @@ async def add_gradients(
     """Add gradient definitions to an SVG."""
     svg_data = await svg_file.read()
 
-    gradients = [{
-        "id": gradient_id,
-        "type": gradient_type,
-        "stops": [
-            {"offset": "0%", "color": color_start},
-            {"offset": "100%", "color": color_end},
-        ],
-    }]
+    gradients = [
+        {
+            "id": gradient_id,
+            "type": gradient_type,
+            "stops": [
+                {"offset": "0%", "color": color_start},
+                {"offset": "100%", "color": color_end},
+            ],
+        }
+    ]
 
     try:
         result = SVGEnhancer.add_gradient_defs(svg_data, gradients)

@@ -2,7 +2,7 @@
 
 SQLAlchemy ORM models for:
 - User accounts (email + OAuth)
-- Team workspaces  
+- Team workspaces
 - Projects & conversions
 - API keys
 - Usage tracking
@@ -33,12 +33,14 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 
 class Base(DeclarativeBase):
     """Base class for all ORM models."""
+
     pass
 
 
 # =============================================================================
 # Enums
 # =============================================================================
+
 
 class UserRole(str, Enum):
     USER = "user"
@@ -77,11 +79,10 @@ class ConversionStatus(str, Enum):
 # User & Auth Models
 # =============================================================================
 
+
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = (
-        Index("ix_users_email", "email", unique=True),
-    )
+    __table_args__ = (Index("ix_users_email", "email", unique=True),)
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), nullable=False, unique=True)
@@ -103,20 +104,27 @@ class User(Base):
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
     last_login_at = Column(DateTime(timezone=True), nullable=True)
 
     # Preferences (JSON)
     preferences = Column(JSON, default=dict)
 
     # Relationships
-    oauth_accounts = relationship("OAuthAccount", back_populates="user", cascade="all, delete-orphan")
+    oauth_accounts = relationship(
+        "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
+    )
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
     conversions = relationship("Conversion", back_populates="user", cascade="all, delete-orphan")
     presets = relationship("UserPreset", back_populates="user", cascade="all, delete-orphan")
-    team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")
+    team_memberships = relationship(
+        "TeamMember", back_populates="user", cascade="all, delete-orphan"
+    )
     usage_records = relationship("UsageRecord", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -141,9 +149,7 @@ class OAuthAccount(Base):
 
 class APIKey(Base):
     __tablename__ = "api_keys"
-    __table_args__ = (
-        Index("ix_api_keys_key_hash", "key_hash", unique=True),
-    )
+    __table_args__ = (Index("ix_api_keys_key_hash", "key_hash", unique=True),)
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -165,6 +171,7 @@ class APIKey(Base):
 # Team & Collaboration Models
 # =============================================================================
 
+
 class Team(Base):
     __tablename__ = "teams"
 
@@ -178,8 +185,11 @@ class Team(Base):
     storage_quota_mb = Column(Integer, default=10240)  # 10GB default
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
@@ -189,9 +199,7 @@ class Team(Base):
 
 class TeamMember(Base):
     __tablename__ = "team_members"
-    __table_args__ = (
-        UniqueConstraint("team_id", "user_id", name="uq_team_member"),
-    )
+    __table_args__ = (UniqueConstraint("team_id", "user_id", name="uq_team_member"),)
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     team_id = Column(String(36), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
@@ -206,6 +214,7 @@ class TeamMember(Base):
 # =============================================================================
 # Project & Conversion Models
 # =============================================================================
+
 
 class Project(Base):
     __tablename__ = "projects"
@@ -223,8 +232,11 @@ class Project(Base):
     is_starred = Column(Boolean, default=False)
     tags = Column(JSON, default=list)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     owner = relationship("User", back_populates="projects")
     team = relationship("Team", back_populates="projects")
@@ -279,6 +291,7 @@ class Conversion(Base):
 # Presets & Settings
 # =============================================================================
 
+
 class UserPreset(Base):
     __tablename__ = "user_presets"
 
@@ -302,8 +315,11 @@ class UserPreset(Base):
 
     use_count = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     user = relationship("User", back_populates="presets")
 
@@ -312,11 +328,10 @@ class UserPreset(Base):
 # Usage & Billing
 # =============================================================================
 
+
 class UsageRecord(Base):
     __tablename__ = "usage_records"
-    __table_args__ = (
-        Index("ix_usage_user_period", "user_id", "period_start"),
-    )
+    __table_args__ = (Index("ix_usage_user_period", "user_id", "period_start"),)
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -331,8 +346,11 @@ class UsageRecord(Base):
     bandwidth_bytes = Column(BigInteger, default=0)
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                        onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     user = relationship("User", back_populates="usage_records")
 

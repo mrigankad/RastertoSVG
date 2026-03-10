@@ -52,6 +52,7 @@ def _get_ai_engine():
     global _ai_engine
     if _ai_engine is None:
         from app.services.ai_engine import AIVectorizationEngine
+
         _ai_engine = AIVectorizationEngine()
         logger.info("AI Vectorization Engine initialized")
     return _ai_engine
@@ -61,10 +62,11 @@ def _get_ai_engine():
 # Image Analysis
 # =============================================================================
 
+
 @router.post("/analyze/{file_id}", response_model=ImageAnalysisResponse)
 async def analyze_image(file_id: str):
     """Analyze an image and get engine recommendations.
-    
+
     Returns detailed image features (color complexity, edge density,
     texture, noise level) and a confidence-scored engine recommendation
     with suggested parameters and preprocessing hints.
@@ -72,16 +74,16 @@ async def analyze_image(file_id: str):
     upload_path = file_manager.get_upload(file_id)
     if not upload_path:
         raise HTTPException(404, "File not found or expired")
-    
+
     try:
         engine = _get_ai_engine()
         analysis = engine.analyze_image(str(upload_path))
-        
+
         if "error" in analysis:
             raise HTTPException(400, analysis["error"])
-        
+
         return ImageAnalysisResponse(**analysis)
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -93,37 +95,38 @@ async def analyze_image(file_id: str):
 # AI-Powered Conversion
 # =============================================================================
 
+
 @router.post("/convert", response_model=AIConversionResponse)
 async def ai_convert(request: AIConversionRequest):
     """Start an AI-powered conversion.
-    
+
     The AI engine will:
     1. Analyze the image to classify it (logo, photo, line art, etc.)
     2. Select the optimal vectorization engine with confidence score
     3. Apply intelligent preprocessing if needed
     4. Convert using the selected engine with optimized parameters
     5. Post-process with DiffVG-inspired SVG optimization
-    
+
     Modes:
     - **auto**: AI selects the best approach
     - **speed**: Fastest conversion, minimal AI
-    - **balanced**: Good quality with smart preprocessing  
+    - **balanced**: Good quality with smart preprocessing
     - **quality**: High quality with AI enhancements + upscaling
     - **max_quality**: Maximum quality with SAM + DiffVG optimization
     """
     upload_path = file_manager.get_upload(request.file_id)
     if not upload_path:
         raise HTTPException(404, "File not found or expired")
-    
+
     try:
         engine = _get_ai_engine()
-        
+
         # Create job
         job_id = str(uuid.uuid4())
         output_dir = Path(settings.RESULT_DIR) / job_id
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = str(output_dir / "output.svg")
-        
+
         # Run conversion
         result = engine.convert(
             input_path=str(upload_path),
@@ -136,10 +139,10 @@ async def ai_convert(request: AIConversionRequest):
             enable_gradients=request.enable_gradients,
             custom_params=request.custom_params,
         )
-        
+
         # Build response
         timings = AIConversionTimings(**result.get("timings", {}))
-        
+
         ai_features_used = []
         if result.get("ai_features", {}).get("preprocessing"):
             ai_features_used.append("ai_preprocessing")
@@ -147,15 +150,13 @@ async def ai_convert(request: AIConversionRequest):
             ai_features_used.append("sam_segmentation")
         if result.get("ai_features", {}).get("optimization"):
             ai_features_used.append("diffvg_optimization")
-        
+
         preprocessing_steps = (
-            result.get("ai_features", {})
-            .get("preprocessing", {})
-            .get("steps_applied", [])
+            result.get("ai_features", {}).get("preprocessing", {}).get("steps_applied", [])
         )
-        
+
         rec = result.get("engine_recommendation", {})
-        
+
         return AIConversionResponse(
             job_id=job_id,
             status="completed" if result.get("success") else "failed",
@@ -171,7 +172,7 @@ async def ai_convert(request: AIConversionRequest):
             total_time=result.get("total_time"),
             created_at=datetime.now(timezone.utc),
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -183,10 +184,10 @@ async def ai_convert(request: AIConversionRequest):
 async def get_ai_result(job_id: str):
     """Download the AI conversion result SVG."""
     result_path = Path(settings.RESULT_DIR) / job_id / "output.svg"
-    
+
     if not result_path.exists():
         raise HTTPException(404, "Result not found")
-    
+
     return FileResponse(
         path=str(result_path),
         media_type="image/svg+xml",
@@ -198,27 +199,28 @@ async def get_ai_result(job_id: str):
 # AI Preprocessing
 # =============================================================================
 
+
 @router.post("/preprocess", response_model=AIPreprocessingResponse)
 async def ai_preprocess(request: AIPreprocessingRequest):
     """Apply AI preprocessing without conversion.
-    
+
     Useful for previewing how AI enhancements will affect the image
     before running conversion. Returns original and processed preview URLs.
     """
     upload_path = file_manager.get_upload(request.file_id)
     if not upload_path:
         raise HTTPException(404, "File not found or expired")
-    
+
     try:
         engine = _get_ai_engine()
-        
+
         # Load image
         image = cv2.imread(str(upload_path))
         if image is None:
             raise HTTPException(400, "Could not load image")
-        
+
         original_h, original_w = image.shape[:2]
-        
+
         # Apply AI preprocessing
         processed, metadata = engine.ai_preprocessing.auto_enhance(
             image,
@@ -230,27 +232,25 @@ async def ai_preprocess(request: AIPreprocessingRequest):
             enable_sharpen=request.enable_sharpen,
             min_dimension=request.min_dimension,
         )
-        
+
         # Save previews
         preview_id = str(uuid.uuid4())
         preview_dir = Path(settings.RESULT_DIR) / "ai_previews"
         preview_dir.mkdir(parents=True, exist_ok=True)
-        
+
         original_path = preview_dir / f"{preview_id}_original.png"
         processed_path = preview_dir / f"{preview_id}_processed.png"
-        
+
         # Resize for preview (max 800px)
         max_preview = 800
         scale = min(max_preview / max(original_w, original_h), 1.0)
         if scale < 1.0:
-            preview_original = cv2.resize(
-                image, (int(original_w * scale), int(original_h * scale))
-            )
+            preview_original = cv2.resize(image, (int(original_w * scale), int(original_h * scale)))
         else:
             preview_original = image
-        
+
         cv2.imwrite(str(original_path), preview_original)
-        
+
         proc_h, proc_w = processed.shape[:2]
         scale_p = min(max_preview / max(proc_w, proc_h), 1.0)
         if scale_p < 1.0:
@@ -259,12 +259,12 @@ async def ai_preprocess(request: AIPreprocessingRequest):
             )
         else:
             preview_processed = processed
-        
+
         cv2.imwrite(str(processed_path), preview_processed)
-        
+
         processing_time = 0.0
         steps = metadata.get("steps_applied", [])
-        
+
         return AIPreprocessingResponse(
             preview_id=preview_id,
             file_id=request.file_id,
@@ -276,7 +276,7 @@ async def ai_preprocess(request: AIPreprocessingRequest):
             original_size={"width": original_w, "height": original_h},
             processed_size={"width": proc_w, "height": proc_h},
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -289,15 +289,12 @@ async def get_ai_preview(preview_id: str, preview_type: str):
     """Get AI preprocessing preview image."""
     if preview_type not in ("original", "processed"):
         raise HTTPException(400, "Type must be 'original' or 'processed'")
-    
-    preview_path = (
-        Path(settings.RESULT_DIR) / "ai_previews" /
-        f"{preview_id}_{preview_type}.png"
-    )
-    
+
+    preview_path = Path(settings.RESULT_DIR) / "ai_previews" / f"{preview_id}_{preview_type}.png"
+
     if not preview_path.exists():
         raise HTTPException(404, "Preview not found")
-    
+
     return FileResponse(path=str(preview_path), media_type="image/png")
 
 
@@ -305,10 +302,11 @@ async def get_ai_preview(preview_id: str, preview_type: str):
 # Background Removal
 # =============================================================================
 
+
 @router.post("/remove-background", response_model=BackgroundRemovalResponse)
 async def remove_background(request: BackgroundRemovalRequest):
     """Remove background from an image using AI.
-    
+
     Methods:
     - **auto**: Automatically detect best method
     - **grabcut**: GrabCut algorithm (best for general images)
@@ -318,37 +316,34 @@ async def remove_background(request: BackgroundRemovalRequest):
     upload_path = file_manager.get_upload(request.file_id)
     if not upload_path:
         raise HTTPException(404, "File not found or expired")
-    
+
     try:
         engine = _get_ai_engine()
-        
+
         image = cv2.imread(str(upload_path))
         if image is None:
             raise HTTPException(400, "Could not load image")
-        
+
         import time
+
         start = time.time()
-        
+
         result, metadata = engine.ai_preprocessing.bg_remover.remove_background(
             image,
             method=request.method,
             threshold=request.threshold,
         )
-        
+
         processing_time = time.time() - start
-        
+
         # Save previews
         preview_id = str(uuid.uuid4())
         preview_dir = Path(settings.RESULT_DIR) / "ai_previews"
         preview_dir.mkdir(parents=True, exist_ok=True)
-        
-        cv2.imwrite(
-            str(preview_dir / f"{preview_id}_original.png"), image
-        )
-        cv2.imwrite(
-            str(preview_dir / f"{preview_id}_processed.png"), result
-        )
-        
+
+        cv2.imwrite(str(preview_dir / f"{preview_id}_original.png"), image)
+        cv2.imwrite(str(preview_dir / f"{preview_id}_processed.png"), result)
+
         return BackgroundRemovalResponse(
             preview_id=preview_id,
             file_id=request.file_id,
@@ -358,7 +353,7 @@ async def remove_background(request: BackgroundRemovalRequest):
             mask_coverage=metadata.get("mask_coverage", 0),
             processing_time=processing_time,
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -370,10 +365,11 @@ async def remove_background(request: BackgroundRemovalRequest):
 # Noise Analysis
 # =============================================================================
 
+
 @router.post("/noise-analysis/{file_id}", response_model=NoiseAnalysisResponse)
 async def analyze_noise(file_id: str):
     """Analyze image noise levels and get denoising recommendations.
-    
+
     Returns detailed noise metrics including:
     - Composite noise score (0-1)
     - Noise type classification (gaussian, salt_pepper, uniform, mixed)
@@ -382,16 +378,16 @@ async def analyze_noise(file_id: str):
     upload_path = file_manager.get_upload(file_id)
     if not upload_path:
         raise HTTPException(404, "File not found or expired")
-    
+
     try:
         engine = _get_ai_engine()
-        
+
         image = cv2.imread(str(upload_path))
         if image is None:
             raise HTTPException(400, "Could not load image")
-        
+
         result = engine.ai_preprocessing.noise_detector.detect_noise(image)
-        
+
         return NoiseAnalysisResponse(
             file_id=file_id,
             noise_score=result.get("noise_score", 0),
@@ -402,7 +398,7 @@ async def analyze_noise(file_id: str):
             high_freq_noise=result.get("high_freq_noise", 0),
             recommendation=result.get("recommendation", {}),
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -414,10 +410,11 @@ async def analyze_noise(file_id: str):
 # Capabilities
 # =============================================================================
 
+
 @router.get("/capabilities", response_model=AICapabilitiesResponse)
 async def get_ai_capabilities():
     """Get all available AI engine capabilities.
-    
+
     Returns information about available engines, preprocessing features,
     optimization options, and SAM availability.
     """

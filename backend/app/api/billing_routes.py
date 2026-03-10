@@ -23,7 +23,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.database import User, PlanTier
 from app.models.billing import (
-    Subscription, Invoice, SubscriptionStatus, BillingCycle, PRICING,
+    Subscription,
+    Invoice,
+    SubscriptionStatus,
+    BillingCycle,
+    PRICING,
 )
 from app.api.auth_middleware import get_current_active_user
 from app.services.billing_service import (
@@ -40,14 +44,17 @@ router = APIRouter(prefix="/billing", tags=["Billing & Monetization (Phase 12)"]
 # Request / Response Models
 # =============================================================================
 
+
 class CheckoutRequest(BaseModel):
     plan: str = Field(description="Plan: pro, team, enterprise")
     billing_cycle: str = Field(default="monthly", description="monthly or yearly")
     trial_days: Optional[int] = Field(default=None, description="Trial period in days")
 
+
 class CheckoutResponse(BaseModel):
     checkout_url: str
     session_id: str
+
 
 class SubscriptionResponse(BaseModel):
     id: str
@@ -60,6 +67,7 @@ class SubscriptionResponse(BaseModel):
     cancel_at: Optional[str]
     trial_ends_at: Optional[str]
 
+
 class InvoiceResponse(BaseModel):
     id: str
     status: str
@@ -68,6 +76,7 @@ class InvoiceResponse(BaseModel):
     invoice_pdf: Optional[str]
     created_at: str
 
+
 class PlanResponse(BaseModel):
     plans: dict
 
@@ -75,6 +84,7 @@ class PlanResponse(BaseModel):
 # =============================================================================
 # Plans
 # =============================================================================
+
 
 @router.get("/plans", response_model=PlanResponse)
 async def get_plans():
@@ -88,7 +98,8 @@ async def get_plans():
             "yearly_monthly_price": round(plan_data["yearly_cents"] / 1200, 2),
             "yearly_savings_pct": (
                 round((1 - plan_data["yearly_cents"] / (plan_data["monthly_cents"] * 12)) * 100)
-                if plan_data["monthly_cents"] > 0 else 0
+                if plan_data["monthly_cents"] > 0
+                else 0
             ),
             "currency": "usd",
         }
@@ -98,6 +109,7 @@ async def get_plans():
 # =============================================================================
 # Checkout
 # =============================================================================
+
 
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout(
@@ -129,10 +141,12 @@ async def create_checkout(
 
     # Ensure Stripe customer exists
     result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user.id).order_by(Subscription.created_at.desc())
+        select(Subscription)
+        .where(Subscription.user_id == user.id)
+        .order_by(Subscription.created_at.desc())
     )
     existing = result.scalar_one_or_none()
-    
+
     customer_id = existing.stripe_customer_id if existing else None
     if not customer_id:
         customer_id = billing.create_customer(
@@ -174,6 +188,7 @@ async def create_checkout(
 # Portal
 # =============================================================================
 
+
 @router.post("/portal")
 async def create_portal(
     user: User = Depends(get_current_active_user),
@@ -206,6 +221,7 @@ async def create_portal(
 # Subscription Management
 # =============================================================================
 
+
 @router.get("/subscription", response_model=Optional[SubscriptionResponse])
 async def get_subscription(
     user: User = Depends(get_current_active_user),
@@ -213,22 +229,32 @@ async def get_subscription(
 ):
     """Get the current user's active subscription."""
     result = await db.execute(
-        select(Subscription).where(
+        select(Subscription)
+        .where(
             Subscription.user_id == user.id,
-            Subscription.status.in_([
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.TRIALING,
-                SubscriptionStatus.PAST_DUE,
-            ]),
-        ).order_by(Subscription.created_at.desc())
+            Subscription.status.in_(
+                [
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                    SubscriptionStatus.PAST_DUE,
+                ]
+            ),
+        )
+        .order_by(Subscription.created_at.desc())
     )
     sub = result.scalar_one_or_none()
 
     if not sub:
         return SubscriptionResponse(
-            id="", plan="free", billing_cycle="monthly",
-            status="active", amount_cents=0, currency="usd",
-            current_period_end=None, cancel_at=None, trial_ends_at=None,
+            id="",
+            plan="free",
+            billing_cycle="monthly",
+            status="active",
+            amount_cents=0,
+            currency="usd",
+            current_period_end=None,
+            cancel_at=None,
+            trial_ends_at=None,
         )
 
     return SubscriptionResponse(
@@ -269,6 +295,7 @@ async def cancel_subscription(
 
     if at_period_end:
         from datetime import datetime, timezone
+
         sub.cancel_at = sub.current_period_end
     else:
         sub.status = SubscriptionStatus.CANCELED
@@ -323,6 +350,7 @@ async def resume_subscription(
 # Invoices
 # =============================================================================
 
+
 @router.get("/invoices", response_model=list[InvoiceResponse])
 async def list_invoices(
     user: User = Depends(get_current_active_user),
@@ -330,7 +358,10 @@ async def list_invoices(
 ):
     """List user's invoices."""
     result = await db.execute(
-        select(Invoice).where(Invoice.user_id == user.id).order_by(Invoice.created_at.desc()).limit(50)
+        select(Invoice)
+        .where(Invoice.user_id == user.id)
+        .order_by(Invoice.created_at.desc())
+        .limit(50)
     )
     invoices = result.scalars().all()
 
@@ -376,6 +407,7 @@ async def get_upcoming_invoice(
 # Stripe Webhooks
 # =============================================================================
 
+
 @router.post("/webhooks/stripe")
 async def stripe_webhook(
     request: Request,
@@ -393,6 +425,7 @@ async def stripe_webhook(
             raise HTTPException(400, "Invalid webhook signature")
     else:
         import json
+
         try:
             event = type("Event", (), json.loads(body))()
         except Exception:
@@ -422,10 +455,11 @@ async def stripe_webhook(
 # Webhook Handlers
 # =============================================================================
 
+
 async def _handle_checkout_completed(event, db: AsyncSession):
     """Process completed checkout session."""
     data = event.data.object if hasattr(event, "data") else event.get("data", {}).get("object", {})
-    
+
     user_id = data.get("metadata", {}).get("user_id")
     customer_id = data.get("customer")
     subscription_id = data.get("subscription")
@@ -485,13 +519,13 @@ async def _handle_subscription_deleted(event, db: AsyncSession):
 
     if sub:
         sub.status = SubscriptionStatus.CANCELED
-        
+
         # Downgrade user to free
         user_result = await db.execute(select(User).where(User.id == sub.user_id))
         user = user_result.scalar_one_or_none()
         if user:
             user.plan = PlanTier.FREE
-        
+
         await db.flush()
 
 

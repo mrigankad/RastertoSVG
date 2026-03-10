@@ -23,11 +23,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.database import (
-    User, Team, Project, Conversion, UserRole, PlanTier, ConversionStatus,
+    User,
+    Team,
+    Project,
+    Conversion,
+    UserRole,
+    PlanTier,
+    ConversionStatus,
 )
 from app.models.billing import (
-    Subscription, Invoice, AuditLog, LicenseKey,
-    SubscriptionStatus, AuditAction, LicenseType, PRICING,
+    Subscription,
+    Invoice,
+    AuditLog,
+    LicenseKey,
+    SubscriptionStatus,
+    AuditAction,
+    LicenseType,
+    PRICING,
 )
 from app.api.auth_middleware import require_role
 from app.services.billing_service import (
@@ -44,6 +56,7 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard (Phase 12)"])
 # Response Models
 # =============================================================================
 
+
 class PlatformStatsResponse(BaseModel):
     total_users: int
     active_users_30d: int
@@ -55,6 +68,7 @@ class PlatformStatsResponse(BaseModel):
     users_by_plan: dict
     conversion_success_rate: float
     avg_conversion_time_ms: float
+
 
 class UserAdminResponse(BaseModel):
     id: str
@@ -69,6 +83,7 @@ class UserAdminResponse(BaseModel):
     created_at: str
     last_login_at: Optional[str]
 
+
 class AuditLogResponse(BaseModel):
     id: str
     user_id: Optional[str]
@@ -79,6 +94,7 @@ class AuditLogResponse(BaseModel):
     ip_address: Optional[str]
     created_at: str
 
+
 class RevenueResponse(BaseModel):
     total_mrr_cents: int
     total_arr_cents: int
@@ -86,6 +102,7 @@ class RevenueResponse(BaseModel):
     churned_30d: int
     revenue_by_plan: dict
     total_invoiced_cents: int
+
 
 class ConversionAnalytics(BaseModel):
     total: int
@@ -97,6 +114,7 @@ class ConversionAnalytics(BaseModel):
     by_route: dict
     by_day: list
 
+
 class SystemHealthResponse(BaseModel):
     status: str
     uptime_seconds: float
@@ -105,6 +123,7 @@ class SystemHealthResponse(BaseModel):
     storage: str
     cpu_percent: float
     memory_mb: float
+
 
 class LicenseResponse(BaseModel):
     id: str
@@ -124,6 +143,7 @@ class LicenseResponse(BaseModel):
 # Platform Stats
 # =============================================================================
 
+
 @router.get("/stats", response_model=PlatformStatsResponse)
 async def get_platform_stats(
     _user: User = Depends(require_role(UserRole.SUPERADMIN, UserRole.ENTERPRISE_ADMIN)),
@@ -137,16 +157,16 @@ async def get_platform_stats(
 
     # User counts
     total_users = (await db.execute(select(func.count(User.id)))).scalar() or 0
-    active_30d = (await db.execute(
-        select(func.count(User.id)).where(User.last_login_at >= thirty_days_ago)
-    )).scalar() or 0
+    active_30d = (
+        await db.execute(select(func.count(User.id)).where(User.last_login_at >= thirty_days_ago))
+    ).scalar() or 0
 
     # Users by plan
     users_by_plan = {}
     for plan in PlanTier:
-        count = (await db.execute(
-            select(func.count(User.id)).where(User.plan == plan)
-        )).scalar() or 0
+        count = (
+            await db.execute(select(func.count(User.id)).where(User.plan == plan))
+        ).scalar() or 0
         users_by_plan[plan.value] = count
 
     # Other counts
@@ -154,26 +174,32 @@ async def get_platform_stats(
     total_projects = (await db.execute(select(func.count(Project.id)))).scalar() or 0
     total_conversions = (await db.execute(select(func.count(Conversion.id)))).scalar() or 0
 
-    conversions_today = (await db.execute(
-        select(func.count(Conversion.id)).where(Conversion.created_at >= today_start)
-    )).scalar() or 0
+    conversions_today = (
+        await db.execute(
+            select(func.count(Conversion.id)).where(Conversion.created_at >= today_start)
+        )
+    ).scalar() or 0
 
-    conversions_week = (await db.execute(
-        select(func.count(Conversion.id)).where(Conversion.created_at >= week_ago)
-    )).scalar() or 0
+    conversions_week = (
+        await db.execute(select(func.count(Conversion.id)).where(Conversion.created_at >= week_ago))
+    ).scalar() or 0
 
     # Success rate
-    completed = (await db.execute(
-        select(func.count(Conversion.id)).where(Conversion.status == ConversionStatus.COMPLETED)
-    )).scalar() or 0
+    completed = (
+        await db.execute(
+            select(func.count(Conversion.id)).where(Conversion.status == ConversionStatus.COMPLETED)
+        )
+    ).scalar() or 0
     success_rate = (completed / total_conversions * 100) if total_conversions > 0 else 0.0
 
     # Avg time
-    avg_time = (await db.execute(
-        select(func.avg(Conversion.processing_time_ms)).where(
-            Conversion.processing_time_ms.isnot(None)
+    avg_time = (
+        await db.execute(
+            select(func.avg(Conversion.processing_time_ms)).where(
+                Conversion.processing_time_ms.isnot(None)
+            )
         )
-    )).scalar() or 0.0
+    ).scalar() or 0.0
 
     return PlatformStatsResponse(
         total_users=total_users,
@@ -193,6 +219,7 @@ async def get_platform_stats(
 # User Management
 # =============================================================================
 
+
 @router.get("/users", response_model=list[UserAdminResponse])
 async def list_users(
     query: Optional[str] = Query(None, description="Search by email or username"),
@@ -209,9 +236,7 @@ async def list_users(
     stmt = select(User)
 
     if query:
-        stmt = stmt.where(
-            User.email.ilike(f"%{query}%") | User.username.ilike(f"%{query}%")
-        )
+        stmt = stmt.where(User.email.ilike(f"%{query}%") | User.username.ilike(f"%{query}%"))
     if plan:
         stmt = stmt.where(User.plan == PlanTier(plan))
     if role:
@@ -226,20 +251,25 @@ async def list_users(
 
     responses = []
     for u in users:
-        conv_count = (await db.execute(
-            select(func.count(Conversion.id)).where(Conversion.user_id == u.id)
-        )).scalar() or 0
+        conv_count = (
+            await db.execute(select(func.count(Conversion.id)).where(Conversion.user_id == u.id))
+        ).scalar() or 0
 
-        responses.append(UserAdminResponse(
-            id=u.id, email=u.email, username=u.username,
-            display_name=u.display_name,
-            role=u.role.value if u.role else "user",
-            plan=u.plan.value if u.plan else "free",
-            is_active=u.is_active, is_verified=u.is_verified,
-            conversions_count=conv_count,
-            created_at=u.created_at.isoformat() if u.created_at else "",
-            last_login_at=u.last_login_at.isoformat() if u.last_login_at else None,
-        ))
+        responses.append(
+            UserAdminResponse(
+                id=u.id,
+                email=u.email,
+                username=u.username,
+                display_name=u.display_name,
+                role=u.role.value if u.role else "user",
+                plan=u.plan.value if u.plan else "free",
+                is_active=u.is_active,
+                is_verified=u.is_verified,
+                conversions_count=conv_count,
+                created_at=u.created_at.isoformat() if u.created_at else "",
+                last_login_at=u.last_login_at.isoformat() if u.last_login_at else None,
+            )
+        )
 
     return responses
 
@@ -309,6 +339,7 @@ async def admin_update_user(
 # Audit Logs
 # =============================================================================
 
+
 @router.get("/audit-logs", response_model=list[AuditLogResponse])
 async def get_audit_logs(
     user_id: Optional[str] = Query(None),
@@ -360,6 +391,7 @@ async def get_audit_logs(
 # Revenue
 # =============================================================================
 
+
 @router.get("/revenue", response_model=RevenueResponse)
 async def get_revenue(
     _user: User = Depends(require_role(UserRole.SUPERADMIN)),
@@ -383,17 +415,17 @@ async def get_revenue(
 
     # Churned in 30 days
     thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-    churned = (await db.execute(
-        select(func.count(Subscription.id)).where(
-            Subscription.status == SubscriptionStatus.CANCELED,
-            Subscription.canceled_at >= thirty_days_ago,
+    churned = (
+        await db.execute(
+            select(func.count(Subscription.id)).where(
+                Subscription.status == SubscriptionStatus.CANCELED,
+                Subscription.canceled_at >= thirty_days_ago,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     # Total invoiced
-    total_invoiced = (await db.execute(
-        select(func.sum(Invoice.total_cents))
-    )).scalar() or 0
+    total_invoiced = (await db.execute(select(func.sum(Invoice.total_cents)))).scalar() or 0
 
     return RevenueResponse(
         total_mrr_cents=total_mrr,
@@ -409,6 +441,7 @@ async def get_revenue(
 # Conversion Analytics
 # =============================================================================
 
+
 @router.get("/conversions/stats", response_model=ConversionAnalytics)
 async def get_conversion_analytics(
     days: int = Query(30, le=365),
@@ -418,30 +451,36 @@ async def get_conversion_analytics(
     """Get conversion analytics."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    total = (await db.execute(
-        select(func.count(Conversion.id)).where(Conversion.created_at >= cutoff)
-    )).scalar() or 0
+    total = (
+        await db.execute(select(func.count(Conversion.id)).where(Conversion.created_at >= cutoff))
+    ).scalar() or 0
 
-    completed = (await db.execute(
-        select(func.count(Conversion.id)).where(
-            Conversion.created_at >= cutoff,
-            Conversion.status == ConversionStatus.COMPLETED,
+    completed = (
+        await db.execute(
+            select(func.count(Conversion.id)).where(
+                Conversion.created_at >= cutoff,
+                Conversion.status == ConversionStatus.COMPLETED,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
-    failed = (await db.execute(
-        select(func.count(Conversion.id)).where(
-            Conversion.created_at >= cutoff,
-            Conversion.status == ConversionStatus.FAILED,
+    failed = (
+        await db.execute(
+            select(func.count(Conversion.id)).where(
+                Conversion.created_at >= cutoff,
+                Conversion.status == ConversionStatus.FAILED,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
-    avg_time = (await db.execute(
-        select(func.avg(Conversion.processing_time_ms)).where(
-            Conversion.created_at >= cutoff,
-            Conversion.processing_time_ms.isnot(None),
+    avg_time = (
+        await db.execute(
+            select(func.avg(Conversion.processing_time_ms)).where(
+                Conversion.created_at >= cutoff,
+                Conversion.processing_time_ms.isnot(None),
+            )
         )
-    )).scalar() or 0.0
+    ).scalar() or 0.0
 
     return ConversionAnalytics(
         total=total,
@@ -450,14 +489,15 @@ async def get_conversion_analytics(
         success_rate=round((completed / total * 100) if total else 0, 2),
         avg_time_ms=round(float(avg_time), 2),
         by_engine={},  # TODO: aggregate by engine_used
-        by_route={},   # TODO: aggregate by processing_route
-        by_day=[],     # TODO: daily breakdown
+        by_route={},  # TODO: aggregate by processing_route
+        by_day=[],  # TODO: daily breakdown
     )
 
 
 # =============================================================================
 # System Health
 # =============================================================================
+
 
 @router.get("/system/health", response_model=SystemHealthResponse)
 async def get_system_health(
@@ -469,6 +509,7 @@ async def get_system_health(
     # Process info
     try:
         import psutil
+
         cpu = psutil.cpu_percent()
         mem = psutil.Process().memory_info().rss / 1024 / 1024
     except ImportError:
@@ -479,6 +520,7 @@ async def get_system_health(
     db_status = "healthy"
     try:
         from app.database import engine
+
         async with engine.connect() as conn:
             await conn.execute(select(func.count()).select_from(User))
     except Exception:
@@ -488,6 +530,7 @@ async def get_system_health(
     redis_status = "unknown"
     try:
         import redis
+
         r = redis.from_url("redis://localhost:6379")
         r.ping()
         redis_status = "healthy"
@@ -508,6 +551,7 @@ async def get_system_health(
 # =============================================================================
 # License Keys
 # =============================================================================
+
 
 @router.post("/licenses", response_model=LicenseResponse, status_code=201)
 async def generate_license(
@@ -577,9 +621,7 @@ async def list_licenses(
     db: AsyncSession = Depends(get_db),
 ):
     """List all license keys."""
-    result = await db.execute(
-        select(LicenseKey).order_by(desc(LicenseKey.issued_at))
-    )
+    result = await db.execute(select(LicenseKey).order_by(desc(LicenseKey.issued_at)))
     keys = result.scalars().all()
 
     return [

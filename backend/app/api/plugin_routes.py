@@ -54,6 +54,7 @@ router = APIRouter(tags=["Plugins & Marketplace (Phase 11)"])
 # Request / Response Models
 # =============================================================================
 
+
 class PluginResponse(BaseModel):
     id: str
     name: str
@@ -68,9 +69,11 @@ class PluginResponse(BaseModel):
     avg_execution_ms: float = 0.0
     error: Optional[str] = None
 
+
 class ExecutePluginRequest(BaseModel):
     method: str = "process"
     params: dict = {}
+
 
 class MarketplaceListingResponse(BaseModel):
     id: str
@@ -88,11 +91,13 @@ class MarketplaceListingResponse(BaseModel):
     icon_url: str = ""
     created_at: str = ""
 
+
 class ReviewRequest(BaseModel):
     rating: int = Field(ge=1, le=5)
     title: str = ""
     body: str = ""
     user_name: str = ""
+
 
 class ReviewResponse(BaseModel):
     id: str
@@ -101,6 +106,7 @@ class ReviewResponse(BaseModel):
     body: str
     user_name: str
     created_at: str
+
 
 class TemplateResponse(BaseModel):
     id: str
@@ -114,12 +120,14 @@ class TemplateResponse(BaseModel):
     is_featured: bool
     tags: list
 
+
 class CreateTemplateRequest(BaseModel):
     name: str = Field(max_length=255)
     description: str = ""
     category: str = "other"
     config: dict = {}
     tags: List[str] = []
+
 
 class MarketplaceStatsResponse(BaseModel):
     total_plugins: int
@@ -135,6 +143,7 @@ class MarketplaceStatsResponse(BaseModel):
 # =============================================================================
 # Plugin Endpoints
 # =============================================================================
+
 
 @router.get("/plugins", response_model=list[PluginResponse])
 async def list_plugins(
@@ -256,7 +265,9 @@ async def execute_plugin(plugin_id: str, request: ExecutePluginRequest):
         return {
             "plugin_id": plugin_id,
             "method": request.method,
-            "result": result if isinstance(result, (dict, list, str, int, float, bool)) else str(result),
+            "result": (
+                result if isinstance(result, (dict, list, str, int, float, bool)) else str(result)
+            ),
             "use_count": plugin.use_count,
         }
     except Exception as e:
@@ -297,6 +308,7 @@ async def get_plugin_settings(plugin_id: str):
 # =============================================================================
 # Marketplace Endpoints
 # =============================================================================
+
 
 @router.get("/marketplace/search", response_model=list[MarketplaceListingResponse])
 async def search_marketplace(
@@ -349,12 +361,19 @@ async def get_featured_plugins(limit: int = Query(10, le=50)):
 
     return [
         MarketplaceListingResponse(
-            id=l.id, name=l.name, version=l.version,
-            description=l.description, author=l.author,
-            plugin_type=l.plugin_type, tags=l.tags,
-            downloads=l.downloads, rating=l.rating,
-            review_count=l.review_count, is_free=l.is_free,
-            price_usd=l.price_usd, icon_url=l.icon_url,
+            id=l.id,
+            name=l.name,
+            version=l.version,
+            description=l.description,
+            author=l.author,
+            plugin_type=l.plugin_type,
+            tags=l.tags,
+            downloads=l.downloads,
+            rating=l.rating,
+            review_count=l.review_count,
+            is_free=l.is_free,
+            price_usd=l.price_usd,
+            icon_url=l.icon_url,
             created_at=l.created_at,
         )
         for l in listings
@@ -379,8 +398,11 @@ async def get_listing_reviews(listing_id: str, limit: int = Query(50)):
 
     return [
         ReviewResponse(
-            id=r.id, rating=r.rating, title=r.title,
-            body=r.body, user_name=r.user_name,
+            id=r.id,
+            rating=r.rating,
+            title=r.title,
+            body=r.body,
+            user_name=r.user_name,
             created_at=r.created_at,
         )
         for r in reviews
@@ -409,8 +431,11 @@ async def submit_review(listing_id: str, request: ReviewRequest):
     review_id = marketplace.add_review(review)
 
     return ReviewResponse(
-        id=review_id, rating=review.rating, title=review.title,
-        body=review.body, user_name=review.user_name,
+        id=review_id,
+        rating=review.rating,
+        title=review.title,
+        body=review.body,
+        user_name=review.user_name,
         created_at=review.created_at,
     )
 
@@ -426,6 +451,7 @@ async def get_marketplace_stats():
 # =============================================================================
 # Template Endpoints
 # =============================================================================
+
 
 @router.get("/templates", response_model=list[TemplateResponse])
 async def list_templates(
@@ -447,10 +473,15 @@ async def list_templates(
 
     return [
         TemplateResponse(
-            id=t.id, name=t.name, description=t.description,
-            author=t.author, category=t.category.value,
-            config=t.config, use_count=t.use_count,
-            rating=t.rating, is_featured=t.is_featured,
+            id=t.id,
+            name=t.name,
+            description=t.description,
+            author=t.author,
+            category=t.category.value,
+            config=t.config,
+            use_count=t.use_count,
+            rating=t.rating,
+            is_featured=t.is_featured,
             tags=t.tags,
         )
         for t in templates
@@ -465,10 +496,15 @@ async def get_featured_templates():
 
     return [
         TemplateResponse(
-            id=t.id, name=t.name, description=t.description,
-            author=t.author, category=t.category.value,
-            config=t.config, use_count=t.use_count,
-            rating=t.rating, is_featured=t.is_featured,
+            id=t.id,
+            name=t.name,
+            description=t.description,
+            author=t.author,
+            category=t.category.value,
+            config=t.config,
+            use_count=t.use_count,
+            rating=t.rating,
+            is_featured=t.is_featured,
             tags=t.tags,
         )
         for t in templates
@@ -484,11 +520,16 @@ async def get_template(template_id: str):
         raise HTTPException(404, "Template not found")
 
     return TemplateResponse(
-        id=template.id, name=template.name,
-        description=template.description, author=template.author,
-        category=template.category.value, config=template.config,
-        use_count=template.use_count, rating=template.rating,
-        is_featured=template.is_featured, tags=template.tags,
+        id=template.id,
+        name=template.name,
+        description=template.description,
+        author=template.author,
+        category=template.category.value,
+        config=template.config,
+        use_count=template.use_count,
+        rating=template.rating,
+        is_featured=template.is_featured,
+        tags=template.tags,
     )
 
 
@@ -515,11 +556,16 @@ async def create_template(request: CreateTemplateRequest):
     template_id = marketplace.create_template(template)
 
     return TemplateResponse(
-        id=template_id, name=template.name,
-        description=template.description, author=template.author,
-        category=template.category.value, config=template.config,
-        use_count=0, rating=0.0,
-        is_featured=False, tags=template.tags,
+        id=template_id,
+        name=template.name,
+        description=template.description,
+        author=template.author,
+        category=template.category.value,
+        config=template.config,
+        use_count=0,
+        rating=0.0,
+        is_featured=False,
+        tags=template.tags,
     )
 
 

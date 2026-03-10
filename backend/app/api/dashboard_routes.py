@@ -19,8 +19,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.database import (
-    User, Project, Conversion, UserPreset, UsageRecord,
-    ProjectStatus, ConversionStatus, PlanTier, PLAN_LIMITS,
+    User,
+    Project,
+    Conversion,
+    UserPreset,
+    UsageRecord,
+    ProjectStatus,
+    ConversionStatus,
+    PlanTier,
+    PLAN_LIMITS,
 )
 from app.api.auth_middleware import get_current_active_user
 from app.services.cloud_storage import get_cloud_storage
@@ -34,10 +41,12 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard (Phase 9)"])
 # Request / Response Models
 # =============================================================================
 
+
 class CreateProjectRequest(BaseModel):
     name: str = Field(max_length=255, default="Untitled Project")
     description: Optional[str] = None
     tags: List[str] = []
+
 
 class UpdateProjectRequest(BaseModel):
     name: Optional[str] = None
@@ -45,6 +54,7 @@ class UpdateProjectRequest(BaseModel):
     tags: Optional[List[str]] = None
     is_starred: Optional[bool] = None
     status: Optional[str] = None
+
 
 class ProjectResponse(BaseModel):
     id: str
@@ -56,6 +66,7 @@ class ProjectResponse(BaseModel):
     conversion_count: int = 0
     created_at: str
     updated_at: str
+
 
 class ConversionResponse(BaseModel):
     id: str
@@ -75,11 +86,13 @@ class ConversionResponse(BaseModel):
     created_at: str
     completed_at: Optional[str]
 
+
 class CreatePresetRequest(BaseModel):
     name: str = Field(max_length=255)
     description: Optional[str] = None
     config: dict
     is_public: bool = False
+
 
 class PresetResponse(BaseModel):
     id: str
@@ -90,6 +103,7 @@ class PresetResponse(BaseModel):
     is_default: bool
     use_count: int
     created_at: str
+
 
 class UsageStatsResponse(BaseModel):
     conversions_this_month: int
@@ -105,6 +119,7 @@ class UsageStatsResponse(BaseModel):
 # =============================================================================
 # Projects
 # =============================================================================
+
 
 @router.get("/projects", response_model=list[ProjectResponse])
 async def list_projects(
@@ -122,7 +137,7 @@ async def list_projects(
         query = query.where(Project.status == ProjectStatus(status))
     else:
         query = query.where(Project.status != ProjectStatus.DELETED)
-    
+
     if starred is not None:
         query = query.where(Project.is_starred == starred)
 
@@ -139,17 +154,19 @@ async def list_projects(
         )
         conv_count = count_result.scalar() or 0
 
-        responses.append(ProjectResponse(
-            id=p.id,
-            name=p.name,
-            description=p.description,
-            status=p.status.value if p.status else "active",
-            is_starred=p.is_starred,
-            tags=p.tags or [],
-            conversion_count=conv_count,
-            created_at=p.created_at.isoformat() if p.created_at else "",
-            updated_at=p.updated_at.isoformat() if p.updated_at else "",
-        ))
+        responses.append(
+            ProjectResponse(
+                id=p.id,
+                name=p.name,
+                description=p.description,
+                status=p.status.value if p.status else "active",
+                is_starred=p.is_starred,
+                tags=p.tags or [],
+                conversion_count=conv_count,
+                created_at=p.created_at.isoformat() if p.created_at else "",
+                updated_at=p.updated_at.isoformat() if p.updated_at else "",
+            )
+        )
 
     return responses
 
@@ -252,6 +269,7 @@ async def delete_project(
 # Conversions
 # =============================================================================
 
+
 @router.get("/conversions", response_model=list[ConversionResponse])
 async def list_conversions(
     project_id: Optional[str] = Query(None),
@@ -325,6 +343,7 @@ async def toggle_star_conversion(
 # =============================================================================
 # Presets
 # =============================================================================
+
 
 @router.get("/presets", response_model=list[PresetResponse])
 async def list_presets(
@@ -412,6 +431,7 @@ async def delete_preset(
 # Usage Stats
 # =============================================================================
 
+
 @router.get("/usage", response_model=UsageStatsResponse)
 async def get_usage_stats(
     user: User = Depends(get_current_active_user),
@@ -423,7 +443,7 @@ async def get_usage_stats(
     # Count conversions this month
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    
+
     conv_result = await db.execute(
         select(func.count(Conversion.id)).where(
             Conversion.user_id == user.id,

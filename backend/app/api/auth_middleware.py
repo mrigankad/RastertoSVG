@@ -32,7 +32,7 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     """Extract and validate the current user from JWT token.
-    
+
     Returns None if no token provided (for optional auth routes).
     Raises 401 if token is invalid.
     """
@@ -79,10 +79,11 @@ async def get_current_active_user(
 
 def require_role(*roles: UserRole):
     """Dependency factory for role-based access control.
-    
+
     Usage:
         @router.get("/admin", dependencies=[Depends(require_role(UserRole.SUPERADMIN))])
     """
+
     async def check_role(
         user: User = Depends(get_current_active_user),
     ) -> User:
@@ -101,7 +102,7 @@ async def api_key_auth(
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     """Authenticate via API key header.
-    
+
     Returns None if no API key provided.
     Raises 401 if key is invalid.
     """
@@ -161,10 +162,11 @@ async def require_auth_user(
 
 def check_plan_limit(feature: str):
     """Dependency factory for plan-based feature gating.
-    
+
     Usage:
         @router.post("/convert", dependencies=[Depends(check_plan_limit("ai_modes"))])
     """
+
     async def _check(user: User = Depends(require_auth_user)) -> User:
         plan_limits = PLAN_LIMITS.get(user.plan, PLAN_LIMITS[PlanTier.FREE])
         limit_value = plan_limits.get(feature)

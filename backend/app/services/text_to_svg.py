@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 # Types
 # =============================================================================
 
+
 class IconStyle(str, Enum):
     OUTLINED = "outlined"
     FILLED = "filled"
@@ -42,6 +43,7 @@ class CompositionAlign(str, Enum):
 @dataclass
 class TextToSVGConfig:
     """Configuration for text-to-SVG generation."""
+
     width: int = 512
     height: int = 512
     style: IconStyle = IconStyle.OUTLINED
@@ -56,6 +58,7 @@ class TextToSVGConfig:
 @dataclass
 class CompositionLayer:
     """A layer in SVG composition."""
+
     svg_content: str
     x: float = 0
     y: float = 0
@@ -71,6 +74,7 @@ class CompositionLayer:
 # =============================================================================
 # Icon Shape Library
 # =============================================================================
+
 
 class ShapeLibrary:
     """Library of basic geometric SVG shapes for icon composition."""
@@ -145,18 +149,19 @@ class ShapeLibrary:
         s = size
         extra = " ".join(f'{k}="{v}"' for k, v in attrs.items())
         return (
-            f'<g {extra}>'
+            f"<g {extra}>"
             f'<circle cx="{cx - s * 0.3}" cy="{cy}" r="{s * 0.35}"/>'
             f'<circle cx="{cx + s * 0.3}" cy="{cy}" r="{s * 0.35}"/>'
             f'<circle cx="{cx}" cy="{cy - s * 0.2}" r="{s * 0.45}"/>'
             f'<rect x="{cx - s * 0.55}" y="{cy}" width="{s * 1.1}" height="{s * 0.35}" rx="{s * 0.05}"/>'
-            f'</g>'
+            f"</g>"
         )
 
 
 # =============================================================================
 # Keyword → Icon Mapper
 # =============================================================================
+
 
 class IconGenerator:
     """Generate simple SVG icons from keyword descriptions."""
@@ -251,9 +256,15 @@ class IconGenerator:
         rx = size * 0.1 if cfg.rounded else 0
 
         builders = {
-            "star": lambda: ShapeLibrary.star(cx, cy, size, size * 0.45, fill=fill, stroke=stroke, **{"stroke-width": sw}),
-            "heart": lambda: ShapeLibrary.heart(cx, cy - size * 0.2, size * 0.6, fill=fill, stroke=stroke, **{"stroke-width": sw}),
-            "gear": lambda: ShapeLibrary.gear(cx, cy, size * 0.7, fill=fill, stroke=stroke, **{"stroke-width": sw}),
+            "star": lambda: ShapeLibrary.star(
+                cx, cy, size, size * 0.45, fill=fill, stroke=stroke, **{"stroke-width": sw}
+            ),
+            "heart": lambda: ShapeLibrary.heart(
+                cx, cy - size * 0.2, size * 0.6, fill=fill, stroke=stroke, **{"stroke-width": sw}
+            ),
+            "gear": lambda: ShapeLibrary.gear(
+                cx, cy, size * 0.7, fill=fill, stroke=stroke, **{"stroke-width": sw}
+            ),
             "cloud": lambda: ShapeLibrary.cloud(cx, cy, size * 0.6, fill=c1, stroke="none"),
             "checkmark": lambda: f'<polyline points="{cx - size * 0.3},{cy} {cx - size * 0.05},{cy + size * 0.25} {cx + size * 0.35},{cy - size * 0.25}" fill="none" stroke="{c1}" stroke-width="{sw * 1.5}" stroke-linecap="round" stroke-linejoin="round"/>',
             "cross": lambda: (
@@ -328,14 +339,18 @@ class IconGenerator:
     def _build_sun(cx, cy, size, color, sw, style):
         fill = color if style == IconStyle.FILLED else "none"
         stroke = color
-        elements = [f'<circle cx="{cx}" cy="{cy}" r="{size * 0.2}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>']
+        elements = [
+            f'<circle cx="{cx}" cy="{cy}" r="{size * 0.2}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"/>'
+        ]
         for i in range(8):
             angle = math.pi * i / 4
             x1 = cx + size * 0.3 * math.cos(angle)
             y1 = cy + size * 0.3 * math.sin(angle)
             x2 = cx + size * 0.45 * math.cos(angle)
             y2 = cy + size * 0.45 * math.sin(angle)
-            elements.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}" stroke-linecap="round"/>')
+            elements.append(
+                f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{stroke}" stroke-width="{sw}" stroke-linecap="round"/>'
+            )
         return "\n".join(elements)
 
     @classmethod
@@ -345,21 +360,26 @@ class IconGenerator:
 
     @staticmethod
     def _wrap_icon_svg(elements: str, cfg: TextToSVGConfig, keyword: str) -> str:
-        bg = f'<rect width="{cfg.width}" height="{cfg.height}" fill="{cfg.background}" rx="24"/>' if cfg.background else ""
+        bg = (
+            f'<rect width="{cfg.width}" height="{cfg.height}" fill="{cfg.background}" rx="24"/>'
+            if cfg.background
+            else ""
+        )
 
-        return f'''<?xml version="1.0" encoding="UTF-8"?>
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{cfg.width}" height="{cfg.height}" 
      viewBox="0 0 {cfg.width} {cfg.height}" role="img">
     <title>{keyword} icon</title>
     <desc>Generated SVG icon for "{keyword}" by Raster to SVG</desc>
     {bg}
     {elements}
-</svg>'''
+</svg>"""
 
 
 # =============================================================================
 # SVG Compositor
 # =============================================================================
+
 
 class SVGCompositor:
     """Compose multiple SVG layers into a single SVG."""
@@ -390,41 +410,46 @@ class SVGCompositor:
 
             transform = f' transform="{"  ".join(transform_parts)}"' if transform_parts else ""
             opacity = f' opacity="{layer.opacity}"' if layer.opacity < 1.0 else ""
-            blend = f' style="mix-blend-mode: {layer.blend_mode};"' if layer.blend_mode != "normal" else ""
+            blend = (
+                f' style="mix-blend-mode: {layer.blend_mode};"'
+                if layer.blend_mode != "normal"
+                else ""
+            )
 
             # Extract inner SVG content (strip outer <svg> tags)
             inner = SVGCompositor._extract_inner(layer.svg_content)
 
             elements.append(
                 f'<g id="layer-{i}" data-name="{layer.name}"{transform}{opacity}{blend}>'
-                f'{inner}'
-                f'</g>'
+                f"{inner}"
+                f"</g>"
             )
 
         content = "\n".join(elements)
 
-        return f'''<?xml version="1.0" encoding="UTF-8"?>
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}"
      viewBox="0 0 {width} {height}" role="img">
     <title>Composed SVG</title>
     <desc>Multi-layer SVG composition</desc>
     {content}
-</svg>'''
+</svg>"""
 
     @staticmethod
     def _extract_inner(svg_content: str) -> str:
         """Extract inner content from an SVG string."""
         # Remove XML declaration
-        svg_content = re.sub(r'<\?xml[^?]+\?>', '', svg_content)
+        svg_content = re.sub(r"<\?xml[^?]+\?>", "", svg_content)
         # Remove outer <svg> tags
-        svg_content = re.sub(r'<svg[^>]*>', '', svg_content, count=1)
-        svg_content = re.sub(r'</svg>\s*$', '', svg_content)
+        svg_content = re.sub(r"<svg[^>]*>", "", svg_content, count=1)
+        svg_content = re.sub(r"</svg>\s*$", "", svg_content)
         return svg_content.strip()
 
 
 # =============================================================================
 # Text-to-Path Renderer
 # =============================================================================
+
 
 class TextRenderer:
     """Render text as SVG with styling."""
@@ -457,7 +482,9 @@ class TextRenderer:
 
         elements = []
         if background:
-            elements.append(f'<rect width="{width}" height="{height}" fill="{background}" rx="12"/>')
+            elements.append(
+                f'<rect width="{width}" height="{height}" fill="{background}" rx="12"/>'
+            )
 
         for i, line in enumerate(lines):
             y = start_y + i * font_size * line_height
@@ -466,17 +493,17 @@ class TextRenderer:
                 f'<text x="{cx}" y="{y}" text-anchor="{text_anchor}" '
                 f'font-family="{font_family}" font-size="{font_size}" '
                 f'font-weight="{font_weight}" fill="{color}"{ls}>'
-                f'{_escape_xml(line)}</text>'
+                f"{_escape_xml(line)}</text>"
             )
 
         content = "\n".join(elements)
 
-        return f'''<?xml version="1.0" encoding="UTF-8"?>
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}"
      viewBox="0 0 {width} {height}" role="img">
     <title>{_escape_xml(text[:50])}</title>
     {content}
-</svg>'''
+</svg>"""
 
     @staticmethod
     def render_styled_heading(
@@ -502,38 +529,38 @@ class TextRenderer:
             for i, color in enumerate(colors):
                 pct = int(i / max(len(colors) - 1, 1) * 100)
                 stops.append(f'<stop offset="{pct}%" stop-color="{color}"/>')
-            defs = f'''<defs>
+            defs = f"""<defs>
                 <linearGradient id="heading-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                     {"".join(stops)}
                 </linearGradient>
-            </defs>'''
+            </defs>"""
             fill = "url(#heading-grad)"
 
         elif style == "outline":
-            return f'''<?xml version="1.0" encoding="UTF-8"?>
+            return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
     <text x="{cx}" y="{cy}" text-anchor="middle" font-family="Arial, sans-serif" 
           font-size="{font_size}" font-weight="900" fill="none" 
           stroke="{colors[0]}" stroke-width="2">{_escape_xml(text)}</text>
-</svg>'''
+</svg>"""
 
         elif style == "shadow":
             shadow_offset = font_size * 0.04
-            return f'''<?xml version="1.0" encoding="UTF-8"?>
+            return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
     <text x="{cx + shadow_offset}" y="{cy + shadow_offset}" text-anchor="middle" 
           font-family="Arial, sans-serif" font-size="{font_size}" font-weight="900" 
           fill="{colors[-1]}" opacity="0.3">{_escape_xml(text)}</text>
     <text x="{cx}" y="{cy}" text-anchor="middle" font-family="Arial, sans-serif" 
           font-size="{font_size}" font-weight="900" fill="{colors[0]}">{_escape_xml(text)}</text>
-</svg>'''
+</svg>"""
 
-        return f'''<?xml version="1.0" encoding="UTF-8"?>
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
     {defs}
     <text x="{cx}" y="{cy}" text-anchor="middle" font-family="Arial, sans-serif" 
           font-size="{font_size}" font-weight="900" fill="{fill}">{_escape_xml(text)}</text>
-</svg>'''
+</svg>"""
 
 
 def _escape_xml(text: str) -> str:

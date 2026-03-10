@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 # Plugin Types
 # =============================================================================
 
+
 class PluginType(str, Enum):
     PREPROCESSING = "preprocessing"
     VECTORIZATION = "vectorization"
@@ -51,9 +52,11 @@ class PluginStatus(str, Enum):
 # Plugin Manifest
 # =============================================================================
 
+
 @dataclass
 class PluginManifest:
     """Plugin metadata from plugin.json manifest."""
+
     id: str
     name: str
     version: str
@@ -62,7 +65,7 @@ class PluginManifest:
     plugin_type: PluginType
     entry_point: str  # Module path, e.g., "my_plugin.main"
     class_name: str  # Class to instantiate
-    
+
     # Optional
     homepage: str = ""
     license: str = "MIT"
@@ -70,18 +73,18 @@ class PluginManifest:
     dependencies: List[str] = field(default_factory=list)
     min_app_version: str = "0.1.0"
     icon: str = ""
-    
+
     # Settings schema (JSON Schema)
     settings_schema: Dict[str, Any] = field(default_factory=dict)
     default_settings: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Security
     permissions: List[str] = field(default_factory=list)  # "network", "filesystem", "gpu"
     sandboxed: bool = True
     verified: bool = False
 
     @staticmethod
-    def from_dict(data: dict) -> 'PluginManifest':
+    def from_dict(data: dict) -> "PluginManifest":
         return PluginManifest(
             id=data.get("id", str(uuid.uuid4())),
             name=data["name"],
@@ -132,6 +135,7 @@ class PluginManifest:
 # Plugin Base Classes (SDK)
 # =============================================================================
 
+
 class BasePlugin(ABC):
     """Base class for all plugins."""
 
@@ -168,11 +172,11 @@ class PreprocessingPlugin(BasePlugin):
     @abstractmethod
     def process(self, image_data: bytes, params: Dict[str, Any]) -> bytes:
         """Apply preprocessing filter to image.
-        
+
         Args:
             image_data: Raw image bytes (PNG/JPEG)
             params: Filter parameters
-        
+
         Returns:
             Processed image bytes
         """
@@ -192,11 +196,11 @@ class VectorizationPlugin(BasePlugin):
     @abstractmethod
     def vectorize(self, image_data: bytes, params: Dict[str, Any]) -> str:
         """Convert image to SVG.
-        
+
         Args:
             image_data: Raw image bytes
             params: Vectorization parameters
-        
+
         Returns:
             SVG string
         """
@@ -216,11 +220,11 @@ class PostProcessingPlugin(BasePlugin):
     @abstractmethod
     def transform(self, svg_data: str, params: Dict[str, Any]) -> str:
         """Transform SVG output.
-        
+
         Args:
             svg_data: SVG string
             params: Transform parameters
-        
+
         Returns:
             Transformed SVG string
         """
@@ -240,11 +244,11 @@ class ExportPlugin(BasePlugin):
     @abstractmethod
     def export(self, svg_data: str, params: Dict[str, Any]) -> bytes:
         """Export SVG to a custom format.
-        
+
         Args:
             svg_data: SVG string
             params: Export parameters
-        
+
         Returns:
             Exported file bytes
         """
@@ -277,9 +281,11 @@ PLUGIN_BASE_CLASSES: Dict[PluginType, Type[BasePlugin]] = {
 # Plugin Instance Container
 # =============================================================================
 
+
 @dataclass
 class PluginInstance:
     """A loaded plugin with its manifest and runtime state."""
+
     manifest: PluginManifest
     instance: Optional[BasePlugin] = None
     status: PluginStatus = PluginStatus.DISCOVERED
@@ -295,6 +301,7 @@ class PluginInstance:
 # =============================================================================
 # Plugin Registry
 # =============================================================================
+
 
 class PluginRegistry:
     """Central plugin registry — discovers, loads, and manages plugins."""
@@ -385,7 +392,9 @@ class PluginRegistry:
             # Get plugin class
             plugin_class = getattr(module, manifest.class_name, None)
             if plugin_class is None:
-                raise AttributeError(f"Class {manifest.class_name} not found in {manifest.entry_point}")
+                raise AttributeError(
+                    f"Class {manifest.class_name} not found in {manifest.entry_point}"
+                )
 
             # Validate it's a proper subclass
             expected_base = PLUGIN_BASE_CLASSES.get(manifest.plugin_type)
@@ -466,8 +475,8 @@ class PluginRegistry:
             plugin_entry.use_count += 1
             n = plugin_entry.use_count
             plugin_entry.avg_execution_ms = (
-                (plugin_entry.avg_execution_ms * (n - 1) + execution_ms) / n
-            )
+                plugin_entry.avg_execution_ms * (n - 1) + execution_ms
+            ) / n
 
             return result
 
@@ -504,7 +513,8 @@ class PluginRegistry:
         """Search plugins by name, description, or tags."""
         query_lower = query.lower()
         return [
-            p for p in self._plugins.values()
+            p
+            for p in self._plugins.values()
             if query_lower in p.manifest.name.lower()
             or query_lower in p.manifest.description.lower()
             or any(query_lower in tag.lower() for tag in p.manifest.tags)
@@ -516,11 +526,11 @@ class PluginRegistry:
 
     def install_plugin(self, manifest_data: dict, plugin_files: Dict[str, bytes]) -> str:
         """Install a new plugin from manifest + files.
-        
+
         Args:
             manifest_data: Plugin manifest dict
             plugin_files: Dict of {filename: file_bytes}
-        
+
         Returns:
             Plugin ID
         """
@@ -574,6 +584,7 @@ class PluginRegistry:
         plugin_dir = self.plugins_dir / plugin_id
         if plugin_dir.exists():
             import shutil
+
             shutil.rmtree(plugin_dir)
 
         del self._plugins[plugin_id]

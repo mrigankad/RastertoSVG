@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 # Stripe Configuration
 # =============================================================================
 
+
 class StripeConfig:
     """Stripe configuration from environment."""
+
     def __init__(self):
         self.secret_key = os.getenv("STRIPE_SECRET_KEY", "")
         self.publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
@@ -42,6 +44,7 @@ _stripe_config = StripeConfig()
 # Billing Service
 # =============================================================================
 
+
 class BillingService:
     """Stripe-powered billing and subscription management."""
 
@@ -54,6 +57,7 @@ class BillingService:
         if self._stripe is None:
             try:
                 import stripe
+
                 stripe.api_key = self.config.secret_key
                 self._stripe = stripe
                 logger.info("Stripe SDK initialized")
@@ -118,7 +122,7 @@ class BillingService:
         trial_days: Optional[int] = None,
     ) -> Optional[Dict[str, str]]:
         """Create a Stripe Checkout session.
-        
+
         Returns:
             {"session_id": str, "url": str}
         """
@@ -185,10 +189,12 @@ class BillingService:
             subscription = stripe.Subscription.retrieve(subscription_id)
             updated = stripe.Subscription.modify(
                 subscription_id,
-                items=[{
-                    "id": subscription["items"]["data"][0].id,
-                    "price": new_price_id,
-                }],
+                items=[
+                    {
+                        "id": subscription["items"]["data"][0].id,
+                        "price": new_price_id,
+                    }
+                ],
                 proration_behavior=proration_behavior,
             )
             logger.info(f"Subscription updated: {subscription_id} → {new_price_id}")
@@ -286,7 +292,9 @@ class BillingService:
                     "invoice_pdf": inv.invoice_pdf,
                     "hosted_invoice_url": inv.hosted_invoice_url,
                     "created": inv.created,
-                    "paid_at": inv.status_transitions.get("paid_at") if inv.status_transitions else None,
+                    "paid_at": (
+                        inv.status_transitions.get("paid_at") if inv.status_transitions else None
+                    ),
                 }
                 for inv in invoices.data
             ]
@@ -376,6 +384,7 @@ class BillingService:
 # License Key Service
 # =============================================================================
 
+
 class LicenseService:
     """License key generation and validation for self-hosted deployments."""
 
@@ -384,7 +393,7 @@ class LicenseService:
     @staticmethod
     def generate_license_key() -> tuple[str, str, str]:
         """Generate a license key.
-        
+
         Returns: (full_key, key_prefix, key_hash)
         """
         segments = [secrets.token_hex(4).upper() for _ in range(4)]
@@ -397,6 +406,7 @@ class LicenseService:
     def validate_key_format(key: str) -> bool:
         """Validate license key format."""
         import re
+
         return bool(re.match(r"^RSVG-[A-F0-9]{8}-[A-F0-9]{8}-[A-F0-9]{8}-[A-F0-9]{8}$", key))
 
     @staticmethod
@@ -407,6 +417,7 @@ class LicenseService:
 # =============================================================================
 # Audit Logger
 # =============================================================================
+
 
 class AuditLogger:
     """Log user actions for compliance and analytics."""
@@ -454,18 +465,20 @@ class AuditLogger:
             await db_session.flush()
         else:
             # Buffer for batch insert
-            self._buffer.append({
-                "user_id": user_id,
-                "team_id": team_id,
-                "action": action,
-                "resource_type": resource_type,
-                "resource_id": resource_id,
-                "description": description,
-                "metadata": metadata,
-                "ip_address": ip_address,
-                "user_agent": user_agent,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            self._buffer.append(
+                {
+                    "user_id": user_id,
+                    "team_id": team_id,
+                    "action": action,
+                    "resource_type": resource_type,
+                    "resource_id": resource_id,
+                    "description": description,
+                    "metadata": metadata,
+                    "ip_address": ip_address,
+                    "user_agent": user_agent,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
         logger.debug(f"Audit: {action} by user={user_id} on {resource_type}/{resource_id}")
 

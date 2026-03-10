@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 # Export Format Enum
 # =============================================================================
 
+
 class ExportFormat(str, Enum):
     SVG = "svg"
     PDF = "pdf"
@@ -42,6 +43,7 @@ class ExportFormat(str, Enum):
 @dataclass
 class ExportOptions:
     """Common export options."""
+
     format: ExportFormat = ExportFormat.SVG
     scale: float = 1.0
     dpi: int = 300
@@ -57,6 +59,7 @@ class ExportOptions:
 @dataclass
 class ExportResult:
     """Result of an export operation."""
+
     data: bytes
     format: ExportFormat
     mime_type: str
@@ -138,6 +141,7 @@ FORMAT_INFO = {
 # SVG Parser utilities
 # =============================================================================
 
+
 def _parse_svg(svg_data: bytes) -> ET.Element:
     """Parse SVG XML and return root element."""
     return ET.fromstring(svg_data)
@@ -146,7 +150,7 @@ def _parse_svg(svg_data: bytes) -> ET.Element:
 def _get_svg_dimensions(root: ET.Element) -> tuple[float, float]:
     """Extract width and height from SVG root."""
     ns = {"svg": "http://www.w3.org/2000/svg"}
-    
+
     width = root.get("width", "100")
     height = root.get("height", "100")
 
@@ -173,49 +177,62 @@ def _extract_paths(root: ET.Element) -> list:
 
     for elem in root.iter():
         tag = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-        
+
         if tag == "path":
             d = elem.get("d", "")
             fill = elem.get("fill", "none")
             stroke = elem.get("stroke", "none")
             stroke_width = float(elem.get("stroke-width", "1"))
-            paths.append({
-                "type": "path",
-                "d": d,
-                "fill": fill,
-                "stroke": stroke,
-                "stroke_width": stroke_width,
-            })
+            paths.append(
+                {
+                    "type": "path",
+                    "d": d,
+                    "fill": fill,
+                    "stroke": stroke,
+                    "stroke_width": stroke_width,
+                }
+            )
         elif tag == "rect":
             x = float(elem.get("x", "0"))
             y = float(elem.get("y", "0"))
             w = float(elem.get("width", "0"))
             h = float(elem.get("height", "0"))
-            paths.append({
-                "type": "rect",
-                "x": x, "y": y, "width": w, "height": h,
-                "fill": elem.get("fill", "none"),
-                "stroke": elem.get("stroke", "none"),
-            })
+            paths.append(
+                {
+                    "type": "rect",
+                    "x": x,
+                    "y": y,
+                    "width": w,
+                    "height": h,
+                    "fill": elem.get("fill", "none"),
+                    "stroke": elem.get("stroke", "none"),
+                }
+            )
         elif tag == "circle":
             cx = float(elem.get("cx", "0"))
             cy = float(elem.get("cy", "0"))
             r = float(elem.get("r", "0"))
-            paths.append({
-                "type": "circle",
-                "cx": cx, "cy": cy, "r": r,
-                "fill": elem.get("fill", "none"),
-                "stroke": elem.get("stroke", "none"),
-            })
+            paths.append(
+                {
+                    "type": "circle",
+                    "cx": cx,
+                    "cy": cy,
+                    "r": r,
+                    "fill": elem.get("fill", "none"),
+                    "stroke": elem.get("stroke", "none"),
+                }
+            )
         elif tag == "line":
-            paths.append({
-                "type": "line",
-                "x1": float(elem.get("x1", "0")),
-                "y1": float(elem.get("y1", "0")),
-                "x2": float(elem.get("x2", "0")),
-                "y2": float(elem.get("y2", "0")),
-                "stroke": elem.get("stroke", "black"),
-            })
+            paths.append(
+                {
+                    "type": "line",
+                    "x1": float(elem.get("x1", "0")),
+                    "y1": float(elem.get("y1", "0")),
+                    "x2": float(elem.get("x2", "0")),
+                    "y2": float(elem.get("y2", "0")),
+                    "stroke": elem.get("stroke", "black"),
+                }
+            )
         elif tag == "polygon" or tag == "polyline":
             points_str = elem.get("points", "")
             points = []
@@ -223,12 +240,14 @@ def _extract_paths(root: ET.Element) -> list:
                 coords = pt.split(",")
                 if len(coords) == 2:
                     points.append((float(coords[0]), float(coords[1])))
-            paths.append({
-                "type": tag,
-                "points": points,
-                "fill": elem.get("fill", "none"),
-                "stroke": elem.get("stroke", "none"),
-            })
+            paths.append(
+                {
+                    "type": tag,
+                    "points": points,
+                    "fill": elem.get("fill", "none"),
+                    "stroke": elem.get("stroke", "none"),
+                }
+            )
 
     return paths
 
@@ -242,10 +261,18 @@ def _parse_color(color_str: str) -> tuple[int, int, int]:
 
     # Named colors
     named = {
-        "black": (0, 0, 0), "white": (255, 255, 255), "red": (255, 0, 0),
-        "green": (0, 128, 0), "blue": (0, 0, 255), "yellow": (255, 255, 0),
-        "cyan": (0, 255, 255), "magenta": (255, 0, 255), "gray": (128, 128, 128),
-        "grey": (128, 128, 128), "orange": (255, 165, 0), "purple": (128, 0, 128),
+        "black": (0, 0, 0),
+        "white": (255, 255, 255),
+        "red": (255, 0, 0),
+        "green": (0, 128, 0),
+        "blue": (0, 0, 255),
+        "yellow": (255, 255, 0),
+        "cyan": (0, 255, 255),
+        "magenta": (255, 0, 255),
+        "gray": (128, 128, 128),
+        "grey": (128, 128, 128),
+        "orange": (255, 165, 0),
+        "purple": (128, 0, 128),
     }
     if color_str in named:
         return named[color_str]
@@ -270,7 +297,7 @@ def _parse_path_d(d: str) -> list:
     """Parse SVG path 'd' attribute into segments."""
     segments = []
     tokens = re.findall(r"[MmLlHhVvCcSsQqTtAaZz]|[-+]?[0-9]*\.?[0-9]+", d)
-    
+
     cmd = ""
     nums = []
     for token in tokens:
@@ -281,16 +308,17 @@ def _parse_path_d(d: str) -> list:
             nums = []
         else:
             nums.append(float(token))
-    
+
     if cmd:
         segments.append((cmd, nums))
-    
+
     return segments
 
 
 # =============================================================================
 # PDF Exporter
 # =============================================================================
+
 
 class PDFExporter:
     """Export SVG to PDF using CairoSVG."""
@@ -299,6 +327,7 @@ class PDFExporter:
     def is_available() -> bool:
         try:
             import cairosvg
+
             return True
         except ImportError:
             return False
@@ -344,6 +373,7 @@ class PDFExporter:
 # EPS Exporter
 # =============================================================================
 
+
 class EPSExporter:
     """Export SVG to EPS (pure Python — no external dependencies)."""
 
@@ -380,11 +410,13 @@ class EPSExporter:
         # Background
         if options.background_color:
             r, g, b = _parse_color(options.background_color)
-            eps_lines.extend([
-                f"{r / 255:.4f} {g / 255:.4f} {b / 255:.4f} setrgbcolor",
-                f"0 0 {width} {height} rectfill",
-                "",
-            ])
+            eps_lines.extend(
+                [
+                    f"{r / 255:.4f} {g / 255:.4f} {b / 255:.4f} setrgbcolor",
+                    f"0 0 {width} {height} rectfill",
+                    "",
+                ]
+            )
 
         # Convert elements
         elements = _extract_paths(root)
@@ -392,11 +424,13 @@ class EPSExporter:
             eps_lines.extend(EPSExporter._element_to_ps(elem))
 
         # Footer
-        eps_lines.extend([
-            "",
-            "grestore",
-            "%%EOF",
-        ])
+        eps_lines.extend(
+            [
+                "",
+                "grestore",
+                "%%EOF",
+            ]
+        )
 
         eps_data = "\n".join(eps_lines).encode("latin-1")
 
@@ -453,7 +487,9 @@ class EPSExporter:
         elif elem_type == "line":
             r, g, b = _parse_color(elem.get("stroke", "black"))
             lines.append(f"{r / 255:.4f} {g / 255:.4f} {b / 255:.4f} setrgbcolor")
-            lines.append(f"newpath {elem['x1']} {elem['y1']} moveto {elem['x2']} {elem['y2']} lineto stroke")
+            lines.append(
+                f"newpath {elem['x1']} {elem['y1']} moveto {elem['x2']} {elem['y2']} lineto stroke"
+            )
 
         elif elem_type == "path":
             d = elem.get("d", "")
@@ -548,6 +584,7 @@ class EPSExporter:
 # DXF Exporter
 # =============================================================================
 
+
 class DXFExporter:
     """Export SVG to DXF (pure Python — AutoCAD compatible)."""
 
@@ -593,41 +630,91 @@ class DXFExporter:
     @staticmethod
     def _build_header(width: float, height: float) -> list:
         return [
-            "0", "SECTION",
-            "2", "HEADER",
-            "9", "$ACADVER", "1", "AC1015",
-            "9", "$INSBASE", "10", "0.0", "20", "0.0", "30", "0.0",
-            "9", "$EXTMIN", "10", "0.0", "20", "0.0", "30", "0.0",
-            "9", "$EXTMAX", "10", f"{width:.6f}", "20", f"{height:.6f}", "30", "0.0",
-            "0", "ENDSEC",
+            "0",
+            "SECTION",
+            "2",
+            "HEADER",
+            "9",
+            "$ACADVER",
+            "1",
+            "AC1015",
+            "9",
+            "$INSBASE",
+            "10",
+            "0.0",
+            "20",
+            "0.0",
+            "30",
+            "0.0",
+            "9",
+            "$EXTMIN",
+            "10",
+            "0.0",
+            "20",
+            "0.0",
+            "30",
+            "0.0",
+            "9",
+            "$EXTMAX",
+            "10",
+            f"{width:.6f}",
+            "20",
+            f"{height:.6f}",
+            "30",
+            "0.0",
+            "0",
+            "ENDSEC",
         ]
 
     @staticmethod
     def _build_tables() -> list:
         return [
-            "0", "SECTION",
-            "2", "TABLES",
-            "0", "TABLE",
-            "2", "LTYPE",
-            "70", "1",
-            "0", "LTYPE",
-            "2", "CONTINUOUS",
-            "70", "0",
-            "3", "Solid line",
-            "72", "65",
-            "73", "0",
-            "40", "0.0",
-            "0", "ENDTAB",
-            "0", "TABLE",
-            "2", "LAYER",
-            "70", "1",
-            "0", "LAYER",
-            "2", "0",
-            "70", "0",
-            "62", "7",
-            "6", "CONTINUOUS",
-            "0", "ENDTAB",
-            "0", "ENDSEC",
+            "0",
+            "SECTION",
+            "2",
+            "TABLES",
+            "0",
+            "TABLE",
+            "2",
+            "LTYPE",
+            "70",
+            "1",
+            "0",
+            "LTYPE",
+            "2",
+            "CONTINUOUS",
+            "70",
+            "0",
+            "3",
+            "Solid line",
+            "72",
+            "65",
+            "73",
+            "0",
+            "40",
+            "0.0",
+            "0",
+            "ENDTAB",
+            "0",
+            "TABLE",
+            "2",
+            "LAYER",
+            "70",
+            "1",
+            "0",
+            "LAYER",
+            "2",
+            "0",
+            "70",
+            "0",
+            "62",
+            "7",
+            "6",
+            "CONTINUOUS",
+            "0",
+            "ENDTAB",
+            "0",
+            "ENDSEC",
         ]
 
     @staticmethod
@@ -689,13 +776,28 @@ class DXFExporter:
             y1 = (svg_height - elem["y1"]) * scale  # Flip Y
             x2 = elem["x2"] * scale
             y2 = (svg_height - elem["y2"]) * scale
-            lines.extend([
-                "0", "LINE",
-                "8", "0",
-                "62", str(aci),
-                "10", f"{x1:.6f}", "20", f"{y1:.6f}", "30", "0.0",
-                "11", f"{x2:.6f}", "21", f"{y2:.6f}", "31", "0.0",
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "LINE",
+                    "8",
+                    "0",
+                    "62",
+                    str(aci),
+                    "10",
+                    f"{x1:.6f}",
+                    "20",
+                    f"{y1:.6f}",
+                    "30",
+                    "0.0",
+                    "11",
+                    f"{x2:.6f}",
+                    "21",
+                    f"{y2:.6f}",
+                    "31",
+                    "0.0",
+                ]
+            )
 
         elif elem_type == "rect":
             x = elem["x"] * scale
@@ -703,42 +805,79 @@ class DXFExporter:
             w = elem["width"] * scale
             h = elem["height"] * scale
             # Draw as LWPOLYLINE (closed rectangle)
-            lines.extend([
-                "0", "LWPOLYLINE",
-                "8", "0",
-                "62", str(aci),
-                "90", "4",
-                "70", "1",  # Closed
-                "10", f"{x:.6f}", "20", f"{y:.6f}",
-                "10", f"{x + w:.6f}", "20", f"{y:.6f}",
-                "10", f"{x + w:.6f}", "20", f"{y - h:.6f}",
-                "10", f"{x:.6f}", "20", f"{y - h:.6f}",
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "LWPOLYLINE",
+                    "8",
+                    "0",
+                    "62",
+                    str(aci),
+                    "90",
+                    "4",
+                    "70",
+                    "1",  # Closed
+                    "10",
+                    f"{x:.6f}",
+                    "20",
+                    f"{y:.6f}",
+                    "10",
+                    f"{x + w:.6f}",
+                    "20",
+                    f"{y:.6f}",
+                    "10",
+                    f"{x + w:.6f}",
+                    "20",
+                    f"{y - h:.6f}",
+                    "10",
+                    f"{x:.6f}",
+                    "20",
+                    f"{y - h:.6f}",
+                ]
+            )
 
         elif elem_type == "circle":
             cx = elem["cx"] * scale
             cy = (svg_height - elem["cy"]) * scale
             rad = elem["r"] * scale
-            lines.extend([
-                "0", "CIRCLE",
-                "8", "0",
-                "62", str(aci),
-                "10", f"{cx:.6f}", "20", f"{cy:.6f}", "30", "0.0",
-                "40", f"{rad:.6f}",
-            ])
+            lines.extend(
+                [
+                    "0",
+                    "CIRCLE",
+                    "8",
+                    "0",
+                    "62",
+                    str(aci),
+                    "10",
+                    f"{cx:.6f}",
+                    "20",
+                    f"{cy:.6f}",
+                    "30",
+                    "0.0",
+                    "40",
+                    f"{rad:.6f}",
+                ]
+            )
 
         elif elem_type == "path":
             # Convert path to line segments (approximate curves)
             segments = _parse_path_d(elem.get("d", ""))
             dxf_points = DXFExporter._path_to_dxf_points(segments, svg_height, scale)
             if len(dxf_points) >= 2:
-                lines.extend([
-                    "0", "LWPOLYLINE",
-                    "8", "0",
-                    "62", str(aci),
-                    "90", str(len(dxf_points)),
-                    "70", "0",
-                ])
+                lines.extend(
+                    [
+                        "0",
+                        "LWPOLYLINE",
+                        "8",
+                        "0",
+                        "62",
+                        str(aci),
+                        "90",
+                        str(len(dxf_points)),
+                        "70",
+                        "0",
+                    ]
+                )
                 for px, py in dxf_points:
                     lines.extend(["10", f"{px:.6f}", "20", f"{py:.6f}"])
 
@@ -746,13 +885,20 @@ class DXFExporter:
             points = elem.get("points", [])
             if points:
                 closed = "1" if elem_type == "polygon" else "0"
-                lines.extend([
-                    "0", "LWPOLYLINE",
-                    "8", "0",
-                    "62", str(aci),
-                    "90", str(len(points)),
-                    "70", closed,
-                ])
+                lines.extend(
+                    [
+                        "0",
+                        "LWPOLYLINE",
+                        "8",
+                        "0",
+                        "62",
+                        str(aci),
+                        "90",
+                        str(len(points)),
+                        "70",
+                        closed,
+                    ]
+                )
                 for px, py in points:
                     dx = px * scale
                     dy = (svg_height - py) * scale
@@ -799,10 +945,18 @@ class DXFExporter:
                 # Approximate cubic Bezier with line segments
                 for i in range(0, len(nums) - 5, 6):
                     for t in [0.25, 0.5, 0.75, 1.0]:
-                        bx = (1-t)**3 * cx + 3*(1-t)**2*t * nums[i] + \
-                             3*(1-t)*t**2 * nums[i+2] + t**3 * nums[i+4]
-                        by = (1-t)**3 * cy + 3*(1-t)**2*t * nums[i+1] + \
-                             3*(1-t)*t**2 * nums[i+3] + t**3 * nums[i+5]
+                        bx = (
+                            (1 - t) ** 3 * cx
+                            + 3 * (1 - t) ** 2 * t * nums[i]
+                            + 3 * (1 - t) * t**2 * nums[i + 2]
+                            + t**3 * nums[i + 4]
+                        )
+                        by = (
+                            (1 - t) ** 3 * cy
+                            + 3 * (1 - t) ** 2 * t * nums[i + 1]
+                            + 3 * (1 - t) * t**2 * nums[i + 3]
+                            + t**3 * nums[i + 5]
+                        )
                         points.append((bx * scale, (svg_height - by) * scale))
                     cx, cy = nums[i + 4], nums[i + 5]
 
@@ -813,6 +967,7 @@ class DXFExporter:
 # PNG Exporter
 # =============================================================================
 
+
 class PNGExporter:
     """Export SVG to high-resolution PNG using CairoSVG."""
 
@@ -820,6 +975,7 @@ class PNGExporter:
     def is_available() -> bool:
         try:
             import cairosvg
+
             return True
         except ImportError:
             return False
@@ -862,6 +1018,7 @@ class PNGExporter:
 # =============================================================================
 # Master Export Engine
 # =============================================================================
+
 
 class ExportEngine:
     """Orchestrates multi-format SVG export."""
@@ -928,14 +1085,18 @@ class ExportEngine:
         """Export SVG to multiple formats at once."""
         results = {}
         for fmt in formats:
-            opts = ExportOptions() if base_options is None else ExportOptions(
-                format=fmt,
-                scale=base_options.scale,
-                dpi=base_options.dpi,
-                width=base_options.width,
-                height=base_options.height,
-                background_color=base_options.background_color,
-                color_space=base_options.color_space,
+            opts = (
+                ExportOptions()
+                if base_options is None
+                else ExportOptions(
+                    format=fmt,
+                    scale=base_options.scale,
+                    dpi=base_options.dpi,
+                    width=base_options.width,
+                    height=base_options.height,
+                    background_color=base_options.background_color,
+                    color_space=base_options.color_space,
+                )
             )
             opts.format = fmt
 

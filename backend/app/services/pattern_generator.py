@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Enums & Config
 # =============================================================================
 
+
 class PatternType(str, Enum):
     STRIPES = "stripes"
     DOTS = "dots"
@@ -41,6 +42,7 @@ class PatternType(str, Enum):
 @dataclass
 class PatternConfig:
     """Configuration for pattern generation."""
+
     pattern_type: PatternType = PatternType.DOTS
     width: int = 800
     height: int = 600
@@ -58,6 +60,7 @@ class PatternConfig:
 @dataclass
 class PaletteConfig:
     """Color palette generation config."""
+
     base_hue: float = 0.6  # 0–1
     scheme: str = "analogous"  # analogous, complementary, triadic, split, monochrome
     count: int = 5
@@ -68,6 +71,7 @@ class PaletteConfig:
 # =============================================================================
 # Color Palette Generator
 # =============================================================================
+
 
 class PaletteGenerator:
     """Generate harmonious color palettes."""
@@ -108,8 +112,9 @@ class PaletteGenerator:
         elif config.scheme == "monochrome":
             hues = [h] * n
             return [
-                PaletteGenerator._hsl_to_hex(h, s * (0.3 + 0.7 * i / max(n - 1, 1)),
-                                              0.2 + 0.6 * i / max(n - 1, 1))
+                PaletteGenerator._hsl_to_hex(
+                    h, s * (0.3 + 0.7 * i / max(n - 1, 1)), 0.2 + 0.6 * i / max(n - 1, 1)
+                )
                 for i in range(n)
             ]
 
@@ -140,6 +145,7 @@ class PaletteGenerator:
 # =============================================================================
 # SVG Pattern Generator
 # =============================================================================
+
 
 class PatternGenerator:
     """Generate SVG patterns procedurally."""
@@ -174,18 +180,34 @@ class PatternGenerator:
     def get_pattern_types(cls) -> List[Dict]:
         """Get available pattern types with descriptions."""
         return [
-            {"type": "stripes", "name": "Stripes", "description": "Parallel diagonal or straight lines"},
+            {
+                "type": "stripes",
+                "name": "Stripes",
+                "description": "Parallel diagonal or straight lines",
+            },
             {"type": "dots", "name": "Polka Dots", "description": "Evenly spaced circular dots"},
             {"type": "chevrons", "name": "Chevrons", "description": "V-shaped zigzag pattern"},
             {"type": "hexagons", "name": "Hexagons", "description": "Honeycomb hexagonal grid"},
             {"type": "waves", "name": "Waves", "description": "Sinusoidal wave pattern"},
             {"type": "diamonds", "name": "Diamonds", "description": "Rotated square diamond grid"},
             {"type": "grid", "name": "Grid", "description": "Regular rectangular grid"},
-            {"type": "triangles", "name": "Triangles", "description": "Tessellated triangle pattern"},
-            {"type": "circles", "name": "Concentric Circles", "description": "Expanding concentric rings"},
+            {
+                "type": "triangles",
+                "name": "Triangles",
+                "description": "Tessellated triangle pattern",
+            },
+            {
+                "type": "circles",
+                "name": "Concentric Circles",
+                "description": "Expanding concentric rings",
+            },
             {"type": "crosshatch", "name": "Crosshatch", "description": "Crossed diagonal lines"},
             {"type": "noise", "name": "Noise", "description": "Organic noise-based texture"},
-            {"type": "gradient_mesh", "name": "Gradient Mesh", "description": "Smooth gradient mesh background"},
+            {
+                "type": "gradient_mesh",
+                "name": "Gradient Mesh",
+                "description": "Smooth gradient mesh background",
+            },
         ]
 
     # =========================================================================
@@ -238,9 +260,7 @@ class PatternGenerator:
                 y = row * spacing
                 color = cfg.colors[row % len(cfg.colors)]
 
-                path = (
-                    f"M {x},{y + h} L {x + spacing / 2},{y} L {x + spacing},{y + h}"
-                )
+                path = f"M {x},{y + h} L {x + spacing / 2},{y} L {x + spacing},{y + h}"
                 elements.append(
                     f'<path d="{path}" fill="none" stroke="{color}" '
                     f'stroke-width="{cfg.stroke_width}" opacity="{cfg.opacity}"/>'
@@ -308,8 +328,7 @@ class PatternGenerator:
 
                 points = f"{cx},{cy - half} {cx + half},{cy} {cx},{cy + half} {cx - half},{cy}"
                 elements.append(
-                    f'<polygon points="{points}" fill="{color}" '
-                    f'opacity="{cfg.opacity * 0.6}"/>'
+                    f'<polygon points="{points}" fill="{color}" ' f'opacity="{cfg.opacity * 0.6}"/>'
                 )
         return "\n".join(elements)
 
@@ -421,11 +440,13 @@ class PatternGenerator:
             cy = random.randint(0, cfg.height)
             r = max(cfg.width, cfg.height) * (0.4 + 0.3 * random.random())
 
-            defs.append(f'''<radialGradient id="mesh-{i}" cx="{cx}" cy="{cy}" r="{r}" 
+            defs.append(
+                f"""<radialGradient id="mesh-{i}" cx="{cx}" cy="{cy}" r="{r}" 
                 gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="{color}" stop-opacity="0.8"/>
                 <stop offset="100%" stop-color="{color}" stop-opacity="0"/>
-            </radialGradient>''')
+            </radialGradient>"""
+            )
 
             elements.append(
                 f'<rect x="0" y="0" width="{cfg.width}" height="{cfg.height}" '
@@ -455,7 +476,7 @@ class PatternGenerator:
                 }
             </style>"""
 
-        return f'''<?xml version="1.0" encoding="UTF-8"?>
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{cfg.width}" height="{cfg.height}" 
      viewBox="0 0 {cfg.width} {cfg.height}" role="img">
     <title>Generated {cfg.pattern_type.value} pattern</title>
@@ -463,4 +484,4 @@ class PatternGenerator:
     {anim_css}
     <rect width="{cfg.width}" height="{cfg.height}" fill="{cfg.background}"/>
     {content}
-</svg>'''
+</svg>"""

@@ -269,8 +269,7 @@ class PreprocessingPipelineBuilder:
         # Blend based on strength
         if edge_params.strength < 1.0:
             enhanced = cv2.addWeighted(
-                image, 1 - edge_params.strength,
-                enhanced, edge_params.strength, 0
+                image, 1 - edge_params.strength, enhanced, edge_params.strength, 0
             )
 
         return enhanced
@@ -292,9 +291,7 @@ class PreprocessingPipelineBuilder:
                 gray = result
 
             # Detect small noise using morphological operations
-            kernel = np.ones(
-                (despeckle_params.size, despeckle_params.size), np.uint8
-            )
+            kernel = np.ones((despeckle_params.size, despeckle_params.size), np.uint8)
             opening = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel)
             closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
@@ -375,8 +372,11 @@ class PreprocessingPipelineBuilder:
 
         # Rotate
         rotated = cv2.warpAffine(
-            image, rotation_matrix, (new_width, new_height),
-            borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 255, 255)
+            image,
+            rotation_matrix,
+            (new_width, new_height),
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(255, 255, 255),
         )
 
         return rotated
@@ -592,7 +592,7 @@ class ColorPaletteExtractor:
         if palette_config.mode == "custom" and palette_config.custom_colors:
             # Use custom colors
             colors = [
-                [int(color[i:i+2], 16) for i in (1, 3, 5)]  # Convert hex to RGB
+                [int(color[i : i + 2], 16) for i in (1, 3, 5)]  # Convert hex to RGB
                 for color in palette_config.custom_colors
             ]
             return self._apply_custom_palette(image, colors)
@@ -683,9 +683,9 @@ class ImageAnalyzer:
 
         # Photo detection
         analysis["is_photo"] = (
-            analysis["color_complexity"] > 0.5 and
-            analysis["unique_colors"] > 1000 and
-            not analysis["is_line_art"]
+            analysis["color_complexity"] > 0.5
+            and analysis["unique_colors"] > 1000
+            and not analysis["is_line_art"]
         )
 
         # Text detection (simplified)

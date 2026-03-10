@@ -53,6 +53,7 @@ router = APIRouter(prefix="/generate", tags=["Generative Features (Phase 13)"])
 # Request / Response Models
 # =============================================================================
 
+
 class IconRequest(BaseModel):
     keyword: str = Field(description="Icon keyword: heart, star, home, user, etc.")
     width: int = Field(default=512, ge=16, le=4096)
@@ -64,8 +65,11 @@ class IconRequest(BaseModel):
     stroke_width: float = Field(default=2.0, ge=0.5, le=20.0)
     padding: float = Field(default=0.15, ge=0.0, le=0.4)
 
+
 class PatternRequest(BaseModel):
-    pattern_type: str = Field(default="dots", description="Pattern type: dots, stripes, hexagons, waves, etc.")
+    pattern_type: str = Field(
+        default="dots", description="Pattern type: dots, stripes, hexagons, waves, etc."
+    )
     width: int = Field(default=800, ge=50, le=4096)
     height: int = Field(default=600, ge=50, le=4096)
     colors: List[str] = Field(default=["#3b82f6", "#8b5cf6", "#ec4899"])
@@ -77,6 +81,7 @@ class PatternRequest(BaseModel):
     seed: int = Field(default=42)
     density: float = Field(default=1.0, ge=0.1, le=3.0)
     animate: bool = False
+
 
 class TextRequest(BaseModel):
     text: str = Field(max_length=5000)
@@ -90,6 +95,7 @@ class TextRequest(BaseModel):
     letter_spacing: float = Field(default=0, ge=-10, le=50)
     line_height: float = Field(default=1.4, ge=0.8, le=3.0)
 
+
 class HeadingRequest(BaseModel):
     text: str = Field(max_length=200)
     style: str = Field(default="gradient", description="gradient, outline, shadow")
@@ -98,17 +104,22 @@ class HeadingRequest(BaseModel):
     width: int = Field(default=800, ge=100, le=4096)
     height: int = Field(default=200, ge=50, le=2048)
 
+
 class PaletteRequest(BaseModel):
     base_hue: float = Field(default=0.6, ge=0.0, le=1.0)
-    scheme: str = Field(default="analogous", description="analogous, complementary, triadic, split, monochrome")
+    scheme: str = Field(
+        default="analogous", description="analogous, complementary, triadic, split, monochrome"
+    )
     count: int = Field(default=5, ge=2, le=20)
     saturation: float = Field(default=0.7, ge=0.0, le=1.0)
     lightness: float = Field(default=0.55, ge=0.0, le=1.0)
+
 
 class PaletteResponse(BaseModel):
     colors: List[str]
     scheme: str
     count: int
+
 
 class ComposeLayerInput(BaseModel):
     svg_content: str
@@ -120,6 +131,7 @@ class ComposeLayerInput(BaseModel):
     blend_mode: str = "normal"
     name: str = "Layer"
 
+
 class ComposeRequest(BaseModel):
     layers: List[ComposeLayerInput]
     width: int = Field(default=800, ge=50, le=4096)
@@ -130,6 +142,7 @@ class ComposeRequest(BaseModel):
 # =============================================================================
 # Icon Endpoints
 # =============================================================================
+
 
 @router.get("/icons")
 async def get_icon_keywords():
@@ -177,6 +190,7 @@ async def generate_icon(request: IconRequest):
 # Pattern Endpoints
 # =============================================================================
 
+
 @router.get("/patterns")
 async def get_pattern_types():
     """Get all available pattern types."""
@@ -192,7 +206,10 @@ async def generate_pattern(request: PatternRequest):
     try:
         pt = PatternType(request.pattern_type)
     except ValueError:
-        raise HTTPException(400, f"Invalid pattern type: {request.pattern_type}. Available: {[p.value for p in PatternType]}")
+        raise HTTPException(
+            400,
+            f"Invalid pattern type: {request.pattern_type}. Available: {[p.value for p in PatternType]}",
+        )
 
     config = PatternConfig(
         pattern_type=pt,
@@ -224,6 +241,7 @@ async def generate_pattern(request: PatternRequest):
 # =============================================================================
 # Text Endpoints
 # =============================================================================
+
 
 @router.post("/text")
 async def render_text(request: TextRequest):
@@ -277,6 +295,7 @@ async def render_heading(request: HeadingRequest):
 # Palette Endpoints
 # =============================================================================
 
+
 @router.get("/palette/schemes")
 async def get_palette_schemes():
     """Get available color palette schemes."""
@@ -290,7 +309,9 @@ async def get_palette_schemes():
 async def generate_palette(request: PaletteRequest):
     """Generate a harmonious color palette."""
     if request.scheme not in PaletteGenerator.get_schemes():
-        raise HTTPException(400, f"Invalid scheme: {request.scheme}. Available: {PaletteGenerator.get_schemes()}")
+        raise HTTPException(
+            400, f"Invalid scheme: {request.scheme}. Available: {PaletteGenerator.get_schemes()}"
+        )
 
     config = PaletteConfig(
         base_hue=request.base_hue,
@@ -312,6 +333,7 @@ async def generate_palette(request: PaletteRequest):
 # =============================================================================
 # Composition Endpoint
 # =============================================================================
+
 
 @router.post("/compose")
 async def compose_svg(request: ComposeRequest):

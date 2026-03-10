@@ -134,7 +134,7 @@ class SVGEnhancer:
         gradients: List[Dict],
     ) -> bytes:
         """Add gradient definitions to SVG.
-        
+
         gradients: list of {
             "id": "grad1",
             "type": "linear" | "radial",
@@ -186,7 +186,7 @@ class SVGEnhancer:
         groups: List[Dict],
     ) -> bytes:
         """Add <clipPath> definitions and apply to grouped elements.
-        
+
         groups: list of {
             "id": "clip1",
             "shape": "rect" | "circle",
@@ -227,7 +227,7 @@ class SVGEnhancer:
     def get_svg_stats(svg_data: bytes) -> Dict:
         """Analyze SVG and return statistics."""
         root = ET.fromstring(svg_data)
-        
+
         stats = {
             "total_elements": 0,
             "paths": 0,

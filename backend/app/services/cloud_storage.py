@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class StorageConfig:
     """Storage configuration."""
+
     def __init__(self):
         self.provider = os.getenv("STORAGE_PROVIDER", "local")  # "local", "s3", "r2"
         self.bucket_name = os.getenv("STORAGE_BUCKET", "raster-svg-uploads")
@@ -52,6 +53,7 @@ class CloudStorageService:
         if self._s3_client is None and self.config.provider in ("s3", "r2"):
             try:
                 import boto3
+
                 kwargs = {
                     "region_name": self.config.region,
                 }
@@ -81,13 +83,13 @@ class CloudStorageService:
         metadata: Optional[dict] = None,
     ) -> dict:
         """Upload a file to storage.
-        
+
         Args:
             file_data: File-like object to upload
             storage_key: Storage path/key (e.g., "users/{id}/inputs/image.png")
             content_type: MIME type
             metadata: Optional metadata dict
-        
+
         Returns:
             {"key": str, "size": int, "etag": str, "url": str}
         """
@@ -102,7 +104,7 @@ class CloudStorageService:
 
         content = file_data.read()
         dest.write_bytes(content)
-        
+
         return {
             "key": key,
             "size": len(content),
@@ -110,7 +112,9 @@ class CloudStorageService:
             "url": f"/storage/{key}",
         }
 
-    def _upload_s3(self, file_data: BinaryIO, key: str, content_type: str, metadata: Optional[dict]) -> dict:
+    def _upload_s3(
+        self, file_data: BinaryIO, key: str, content_type: str, metadata: Optional[dict]
+    ) -> dict:
         client = self._get_s3_client()
         if not client:
             return self._upload_local(file_data, key, content_type)
@@ -120,10 +124,10 @@ class CloudStorageService:
             extra_args["Metadata"] = {k: str(v) for k, v in metadata.items()}
 
         client.upload_fileobj(file_data, self.config.bucket_name, key, ExtraArgs=extra_args)
-        
+
         # Get object metadata
         head = client.head_object(Bucket=self.config.bucket_name, Key=key)
-        
+
         return {
             "key": key,
             "size": head.get("ContentLength", 0),
@@ -142,7 +146,7 @@ class CloudStorageService:
 
         if self.config.provider == "local":
             return f"/storage/{storage_key}"
-        
+
         client = self._get_s3_client()
         if not client:
             return f"/storage/{storage_key}"
@@ -160,11 +164,11 @@ class CloudStorageService:
             if path.exists():
                 return path.read_bytes()
             return None
-        
+
         client = self._get_s3_client()
         if not client:
             return None
-        
+
         try:
             response = client.get_object(Bucket=self.config.bucket_name, Key=storage_key)
             return response["Body"].read()
@@ -184,11 +188,11 @@ class CloudStorageService:
                 path.unlink()
                 return True
             return False
-        
+
         client = self._get_s3_client()
         if not client:
             return False
-        
+
         try:
             client.delete_object(Bucket=self.config.bucket_name, Key=storage_key)
             return True
@@ -205,7 +209,7 @@ class CloudStorageService:
                 shutil.rmtree(path)
                 return count
             return 0
-        
+
         client = self._get_s3_client()
         if not client:
             return 0
@@ -234,7 +238,7 @@ class CloudStorageService:
             path = self.config.local_base_path / prefix
             if not path.exists():
                 return {"total_bytes": 0, "file_count": 0}
-            
+
             total = 0
             count = 0
             for f in path.rglob("*"):
@@ -242,7 +246,7 @@ class CloudStorageService:
                     total += f.stat().st_size
                     count += 1
             return {"total_bytes": total, "file_count": count}
-        
+
         client = self._get_s3_client()
         if not client:
             return {"total_bytes": 0, "file_count": 0}
@@ -259,7 +263,7 @@ class CloudStorageService:
 
     def generate_storage_key(self, user_id: str, category: str, filename: str) -> str:
         """Generate a unique storage key for a file.
-        
+
         Example: users/abc123/inputs/1710000000_image.png
         """
         timestamp = int(time.time())
