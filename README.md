@@ -1,4 +1,4 @@
-# Raster to SVG Converter
+# Auto Trace
 
 A production-grade raster-to-vector conversion platform with three quality tiers, advanced preprocessing, async processing, and a modern web interface.
 
