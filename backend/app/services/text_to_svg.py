@@ -233,11 +233,11 @@ class IconGenerator:
             shape_key = "default_circle"
 
         # Build the icon
-        elements = cls._build_icon(shape_key, config)
+        elements = cls._build_icon(shape_key, config, keyword)
         return cls._wrap_icon_svg(elements, config, keyword)
 
     @classmethod
-    def _build_icon(cls, shape_key: str, cfg: TextToSVGConfig) -> str:
+    def _build_icon(cls, shape_key: str, cfg: TextToSVGConfig, keyword: str = "") -> str:
         """Build icon elements for a shape key."""
         w, h = cfg.width, cfg.height
         cx, cy = w / 2, h / 2

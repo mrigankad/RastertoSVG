@@ -61,7 +61,7 @@ interface AdvancedConversionState {
   setColorPalette: (palette: number) => void;
   setDenoiseStrength: (strength: 'light' | 'medium' | 'heavy') => void;
   setSelectedPreset: (presetId: string | null) => void;
-  
+
   // Preprocessing actions
   setPreprocessing: (pipeline: PreprocessingPipeline) => void;
   addPreprocessingStep: (step: PreprocessingStep) => void;
@@ -69,12 +69,12 @@ interface AdvancedConversionState {
   removePreprocessingStep: (stepId: string) => void;
   movePreprocessingStep: (stepId: string, direction: 'up' | 'down') => void;
   togglePreprocessingStep: (stepId: string) => void;
-  
+
   // Advanced config actions
   setPaletteConfig: (config: ColorPaletteConfig) => void;
   setVectorization: (params: VectorizationParams) => void;
   setOutputConfig: (config: SVGOutputConfig) => void;
-  
+
   // Reset
   resetToDefaults: () => void;
   applyPreset: (preset: ConversionPreset) => void;
@@ -258,7 +258,7 @@ interface PreviewState {
   processingTime: number | null;
   dimensions: { width: number; height: number } | null;
   error: string | null;
-  
+
   setGenerating: (isGenerating: boolean) => void;
   setPreview: (preview: {
     previewId: string;
@@ -311,7 +311,7 @@ interface FilterRegistryState {
   categories: string[];
   isLoading: boolean;
   error: string | null;
-  
+
   setFilters: (filters: FilterInfo[], categories: string[]) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
@@ -351,11 +351,11 @@ interface ImageAnalysisState {
   } | null;
   isAnalyzing: boolean;
   error: string | null;
-  
+
   setAnalysis: (analysis: ImageAnalysisState['analysis']) => void;
   setAnalyzing: (isAnalyzing: boolean) => void;
   setError: (error: string | null) => void;
-  clearAnalysis: () => set({ analysis: null, error: null }),
+  clearAnalysis: () => void;
 }
 
 export const useImageAnalysisStore = create<ImageAnalysisState>((set) => ({
@@ -378,7 +378,7 @@ interface PresetState {
   selectedPreset: ConversionPreset | null;
   isLoading: boolean;
   error: string | null;
-  
+
   setPresets: (presets: ConversionPreset[]) => void;
   setSelectedPreset: (preset: ConversionPreset | null) => void;
   setLoading: (isLoading: boolean) => void;
