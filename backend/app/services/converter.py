@@ -363,9 +363,11 @@ class Converter:
                 return image, {}, []
 
         try:
-            enhanced_image, param_overrides, steps_applied = (
-                self._ml_converter.enhance_for_vectorization(image, image_type)
-            )
+            (
+                enhanced_image,
+                param_overrides,
+                steps_applied,
+            ) = self._ml_converter.enhance_for_vectorization(image, image_type)
             logger.info(f"ML enhancement applied: {steps_applied}")
             return enhanced_image, param_overrides, steps_applied
         except Exception as e:
